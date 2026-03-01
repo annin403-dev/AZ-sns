@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { Community } from "@/types/database.types";
 
 /**
  * 探すページ（コミュニティ・チャレンジ）
@@ -7,11 +8,12 @@ export default async function ExplorePage() {
   const supabase = await createClient();
 
   // コミュニティ一覧を取得
-  const { data: communities } = await supabase
+  const { data: communitiesRaw } = await supabase
     .from("communities")
     .select("*")
     .order("member_count", { ascending: false })
     .limit(10);
+  const communities = communitiesRaw as Community[] | null;
 
   const GOAL_AREA_LABELS: Record<string, string> = {
     work: "💼 仕事",

@@ -33,9 +33,14 @@ export async function middleware(request: NextRequest) {
   );
 
   // セッションを更新（重要：常に実行する必要あり）
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase未設定時はパススルー
+    return supabaseResponse;
+  }
 
   // 保護されたルートへの未認証アクセスをリダイレクト
   const protectedPaths = ["/home", "/profile", "/post", "/coach", "/explore", "/onboarding"];

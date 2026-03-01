@@ -13,19 +13,26 @@ export async function sendMessageToCoach(message: string) {
   if (!user) return { error: "ログインが必要です" };
 
   // 過去の会話履歴を取得（最新20件）
-  const { data: history } = await supabase
+  const { data: historyRaw } = await supabase
     .from("ai_conversations")
     .select("role, content")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true })
     .limit(20);
+  const history = historyRaw as Array<{ role: string; content: string }> | null;
 
   // ソウルタイプ情報を取得
-  const { data: soulType } = await supabase
+  const { data: soulTypeRaw } = await supabase
     .from("soul_types")
     .select("type_name, energy_sources, stop_triggers, goal_area")
     .eq("user_id", user.id)
     .single();
+  const soulType = soulTypeRaw as {
+    type_name: string;
+    energy_sources: string[];
+    stop_triggers: string[];
+    goal_area: string;
+  } | null;
 
   const messages = [
     ...(history || []).map((h) => ({
@@ -44,7 +51,8 @@ export async function sendMessageToCoach(message: string) {
     });
 
     // 会話をDBに保存
-    await supabase.from("ai_conversations").insert([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from("ai_conversations") as any).insert([
       { user_id: user.id, role: "user", content: message },
       { user_id: user.id, role: "assistant", content: response },
     ]);
