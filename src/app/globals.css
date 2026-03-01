@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+
+  html,
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: #0a0a0f;
+    color: #e8e8f0;
+  }
+
+  /* スクロールバーのスタイル */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0a0a0f;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2a2a3d;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* グロー効果のあるボタン */
+  .btn-glow {
+    @apply relative overflow-hidden transition-all duration-300;
+    box-shadow: 0 0 20px rgba(96, 96, 240, 0.3);
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 40px rgba(96, 96, 240, 0.6);
+    transform: translateY(-1px);
+  }
+
+  .btn-glow:active {
+    transform: translateY(0);
+  }
+
+  /* カードスタイル */
+  .card-surface {
+    @apply bg-az-surface border border-az-border rounded-2xl;
+  }
+
+  /* ソウルタイプの光輪 */
+  .soul-glow {
+    box-shadow: 0 0 30px rgba(96, 96, 240, 0.4), 0 0 60px rgba(192, 96, 240, 0.2);
+  }
+
+  /* 達成エフェクト */
+  .achievement-shine {
+    background: linear-gradient(
+      135deg,
+      rgba(240, 192, 96, 0.2) 0%,
+      rgba(240, 192, 96, 0.05) 50%,
+      rgba(240, 192, 96, 0.2) 100%
+    );
+    border: 1px solid rgba(240, 192, 96, 0.4);
+  }
+
+  /* 選択肢タップボタン */
+  .choice-btn {
+    @apply w-full text-left px-4 py-3 rounded-xl border border-az-border
+           bg-az-muted text-az-text transition-all duration-200
+           hover:border-az-glow hover:bg-az-glow/10 active:scale-95;
+  }
+
+  .choice-btn.selected {
+    @apply border-az-glow bg-az-glow/20 text-white;
+    box-shadow: 0 0 15px rgba(96, 96, 240, 0.3);
+  }
+
+  /* ボトムナビゲーション */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-az-surface/95 backdrop-blur-xl
+           border-t border-az-border z-50;
+  }
+}
+
+@layer utilities {
+  /* テキストグロー */
+  .text-glow {
+    text-shadow: 0 0 20px rgba(96, 96, 240, 0.8);
+  }
+
+  .text-gold-glow {
+    text-shadow: 0 0 20px rgba(240, 192, 96, 0.8);
+  }
+
+  /* パーティクルアニメーション */
+  .particle-burst {
+    position: relative;
+  }
+
+  .particle-burst::before {
+    content: "✨";
+    position: absolute;
+    animation: particle 1s ease-out forwards;
+  }
+}
