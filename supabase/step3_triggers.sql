@@ -1,18 +1,17 @@
 -- ============================================================
 -- ステップ3: トリガー関数
--- ※ NEW./OLD. を使わず、遷移テーブルと moddatetime を使用
+-- ※ $$ の代わりに $body$ を使用（LaTeX変換バグ回避）
 -- ============================================================
 
 -- updated_at 自動更新に moddatetime 拡張を使用
 CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
 
 -- 新規ユーザー作成時にプロフィールを自動生成
--- （遷移テーブル "inserted_rows" を使い NEW. を回避）
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS $body$
 BEGIN
   INSERT INTO public.profiles (id, username, display_name)
   SELECT
@@ -27,7 +26,7 @@ BEGIN
 
   RETURN NULL;
 END;
-$$;
+$body$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -36,26 +35,27 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH STATEMENT EXECUTE FUNCTION public.handle_new_user();
 
 -- タスク完了時に XP を加算
--- （遷移テーブルを使い、1文字エイリアスも回避）
 CREATE OR REPLACE FUNCTION public.handle_task_complete()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS $body$
 BEGIN
   UPDATE public.profiles
   SET
-    xp = public.profiles.xp + new_tasks.xp_reward,
+    xp = xp + xp_reward,
     last_active_at = NOW()
-  FROM new_tasks
-  JOIN old_tasks ON new_tasks.id = old_tasks.id
-  WHERE new_tasks.is_completed = TRUE
-    AND old_tasks.is_completed = FALSE
-    AND public.profiles.id = new_tasks.user_id;
+  FROM (
+    SELECT user_id, xp_reward
+    FROM new_tasks
+    WHERE is_completed = TRUE
+      AND id IN (SELECT id FROM old_tasks WHERE is_completed = FALSE)
+  ) AS task_updates
+  WHERE id = user_id;
 
   RETURN NULL;
 END;
-$$;
+$body$;
 
 DROP TRIGGER IF EXISTS on_task_completed ON public.tasks;
 CREATE TRIGGER on_task_completed
