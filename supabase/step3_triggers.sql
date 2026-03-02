@@ -36,22 +36,22 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH STATEMENT EXECUTE FUNCTION public.handle_new_user();
 
 -- タスク完了時に XP を加算
--- （遷移テーブル "new_tasks"/"old_tasks" を使い NEW./OLD. を回避）
+-- （遷移テーブルを使い、1文字エイリアスも回避）
 CREATE OR REPLACE FUNCTION public.handle_task_complete()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  UPDATE public.profiles p
+  UPDATE public.profiles
   SET
-    xp = p.xp + n.xp_reward,
+    xp = public.profiles.xp + new_tasks.xp_reward,
     last_active_at = NOW()
-  FROM new_tasks n
-  JOIN old_tasks o ON n.id = o.id
-  WHERE n.is_completed = TRUE
-    AND o.is_completed = FALSE
-    AND p.id = n.user_id;
+  FROM new_tasks
+  JOIN old_tasks ON new_tasks.id = old_tasks.id
+  WHERE new_tasks.is_completed = TRUE
+    AND old_tasks.is_completed = FALSE
+    AND public.profiles.id = new_tasks.user_id;
 
   RETURN NULL;
 END;
