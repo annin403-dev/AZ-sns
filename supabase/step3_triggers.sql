@@ -1,87 +1,85 @@
 -- ============================================================
--- ステップ3: トリガー関数（このファイルをそのままコピーして実行）
+-- ステップ3: トリガー関数
+-- ※ NEW./OLD. を使わず、遷移テーブルと moddatetime を使用
 -- ============================================================
 
--- 新規ユーザー登録時にプロフィールを自動作成する関数
+-- updated_at 自動更新に moddatetime 拡張を使用
+CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
+
+-- 新規ユーザー作成時にプロフィールを自動生成
+-- （遷移テーブル "inserted_rows" を使い NEW. を回避）
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
-DECLARE
-  v_username TEXT;
-  v_display_name TEXT;
 BEGIN
-  v_username := COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1));
-  v_display_name := COALESCE(NEW.raw_user_meta_data->>'display_name', v_username);
-
   INSERT INTO public.profiles (id, username, display_name)
-  VALUES (NEW.id, v_username, v_display_name);
+  SELECT
+    id,
+    COALESCE(raw_user_meta_data->>'username', split_part(email, '@', 1)),
+    COALESCE(raw_user_meta_data->>'display_name',
+             COALESCE(raw_user_meta_data->>'username', split_part(email, '@', 1)))
+  FROM inserted_rows;
 
   INSERT INTO public.onboarding_progress (user_id)
-  VALUES (NEW.id);
+  SELECT id FROM inserted_rows;
 
-  RETURN NEW;
+  RETURN NULL;
 END;
 $$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+  REFERENCING NEW TABLE AS inserted_rows
+  FOR EACH STATEMENT EXECUTE FUNCTION public.handle_new_user();
 
--- updated_at を自動更新する関数
-CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER on_profile_updated
-  BEFORE UPDATE ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-
-CREATE TRIGGER on_onboarding_updated
-  BEFORE UPDATE ON public.onboarding_progress
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-
-CREATE TRIGGER on_goal_updated
-  BEFORE UPDATE ON public.goals
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-
-CREATE TRIGGER on_post_updated
-  BEFORE UPDATE ON public.posts
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-
--- タスク完了時に XP を付与する関数
+-- タスク完了時に XP を加算
+-- （遷移テーブル "new_tasks"/"old_tasks" を使い NEW./OLD. を回避）
 CREATE OR REPLACE FUNCTION public.handle_task_complete()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
-DECLARE
-  v_completed BOOLEAN;
-  v_was_completed BOOLEAN;
 BEGIN
-  v_completed := NEW.is_completed;
-  v_was_completed := OLD.is_completed;
+  UPDATE public.profiles p
+  SET
+    xp = p.xp + n.xp_reward,
+    last_active_at = NOW()
+  FROM new_tasks n
+  JOIN old_tasks o ON n.id = o.id
+  WHERE n.is_completed = TRUE
+    AND o.is_completed = FALSE
+    AND p.id = n.user_id;
 
-  IF v_completed = TRUE AND v_was_completed = FALSE THEN
-    UPDATE public.profiles
-    SET
-      xp = xp + NEW.xp_reward,
-      last_active_at = NOW()
-    WHERE id = NEW.user_id;
-  END IF;
-
-  RETURN NEW;
+  RETURN NULL;
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_task_completed ON public.tasks;
 CREATE TRIGGER on_task_completed
   AFTER UPDATE ON public.tasks
-  FOR EACH ROW EXECUTE FUNCTION public.handle_task_complete();
+  REFERENCING NEW TABLE AS new_tasks OLD TABLE AS old_tasks
+  FOR EACH STATEMENT EXECUTE FUNCTION public.handle_task_complete();
+
+-- updated_at 自動更新トリガー（moddatetime 拡張を使用）
+DROP TRIGGER IF EXISTS on_profile_updated ON public.profiles;
+CREATE TRIGGER on_profile_updated
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE PROCEDURE extensions.moddatetime(updated_at);
+
+DROP TRIGGER IF EXISTS on_onboarding_updated ON public.onboarding_progress;
+CREATE TRIGGER on_onboarding_updated
+  BEFORE UPDATE ON public.onboarding_progress
+  FOR EACH ROW EXECUTE PROCEDURE extensions.moddatetime(updated_at);
+
+DROP TRIGGER IF EXISTS on_goal_updated ON public.goals;
+CREATE TRIGGER on_goal_updated
+  BEFORE UPDATE ON public.goals
+  FOR EACH ROW EXECUTE PROCEDURE extensions.moddatetime(updated_at);
+
+DROP TRIGGER IF EXISTS on_post_updated ON public.posts;
+CREATE TRIGGER on_post_updated
+  BEFORE UPDATE ON public.posts
+  FOR EACH ROW EXECUTE PROCEDURE extensions.moddatetime(updated_at);
