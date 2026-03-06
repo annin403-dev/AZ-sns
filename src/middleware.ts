@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 保護されたルートへの未認証アクセスをリダイレクト
-  const protectedPaths = ["/home", "/profile", "/post", "/coach", "/explore", "/onboarding"];
+  const protectedPaths = ["/home", "/profile", "/post", "/coach", "/explore"];
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );

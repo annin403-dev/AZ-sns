@@ -3,8 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 
 /**
- * オンボーディングページ（サーバーコンポーネント）
- * 進捗を取得してクライアントに渡す
+ * オンボーディングページ
+ * ゲスト（未登録）でも診断を体験できる
  */
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -12,20 +12,21 @@ export default async function OnboardingPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
+  // ログイン済みでオンボーディング完了済みならホームへ
+  if (user) {
+    const { data: progress } = await supabase
+      .from("onboarding_progress")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (progress?.is_complete) {
+      redirect("/home");
+    }
+
+    return <OnboardingFlow initialProgress={progress} isGuest={false} />;
   }
 
-  // 既にオンボーディング完了済みならホームへ
-  const { data: progress } = await supabase
-    .from("onboarding_progress")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-
-  if (progress?.is_complete) {
-    redirect("/home");
-  }
-
-  return <OnboardingFlow initialProgress={progress} />;
+  // 未ログインはゲストモードで診断を体験
+  return <OnboardingFlow initialProgress={null} isGuest={true} />;
 }

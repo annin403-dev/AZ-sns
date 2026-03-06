@@ -7,13 +7,14 @@ import { SoulType } from "@/types/database.types";
 
 interface SoulTypeRevealProps {
   soulType: Partial<SoulType>;
+  isGuest?: boolean;
 }
 
 /**
  * ソウルタイプ発表画面
  * 全画面の光演出でユーザーのソウルタイプを表示する
  */
-export default function SoulTypeReveal({ soulType }: SoulTypeRevealProps) {
+export default function SoulTypeReveal({ soulType, isGuest = false }: SoulTypeRevealProps) {
   const router = useRouter();
   const [phase, setPhase] = useState<"flash" | "reveal" | "details">("flash");
 
@@ -131,18 +132,49 @@ export default function SoulTypeReveal({ soulType }: SoulTypeRevealProps) {
               </div>
             )}
 
-            {/* 旅を始めるボタン */}
-            <button
-              onClick={() => router.push("/home")}
-              className="w-full py-4 rounded-xl font-bold text-az-bg
-                         bg-gradient-gold btn-glow text-lg"
-            >
-              旅を始める 🚀
-            </button>
-
-            <p className="text-az-subtle text-xs text-center">
-              タイプはいつでも「自分」ページから確認できます
-            </p>
+            {/* ボタン */}
+            {isGuest ? (
+              <div className="space-y-3">
+                <p className="text-az-subtle text-xs text-center">
+                  診断結果を保存・活用するには無料登録
+                </p>
+                <button
+                  onClick={() => router.push("/register")}
+                  className="w-full py-4 rounded-xl font-bold text-az-bg
+                             bg-gradient-gold btn-glow text-lg"
+                >
+                  診断を保存して旅を始める ✨
+                </button>
+                <button
+                  onClick={() => router.push("/register")}
+                  className="w-full py-3 rounded-xl font-semibold
+                             border border-az-glow/40 text-az-glow text-sm"
+                >
+                  結果を共有する（無料登録）
+                </button>
+                <p className="text-center">
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="text-az-subtle text-xs underline"
+                  >
+                    すでにアカウントがある方はログイン
+                  </button>
+                </p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => router.push("/home")}
+                  className="w-full py-4 rounded-xl font-bold text-az-bg
+                             bg-gradient-gold btn-glow text-lg"
+                >
+                  旅を始める 🚀
+                </button>
+                <p className="text-az-subtle text-xs text-center">
+                  タイプはいつでも「自分」ページから確認できます
+                </p>
+              </>
+            )}
           </motion.div>
         </motion.div>
       </div>

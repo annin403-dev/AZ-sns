@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { OnboardingProgress, CardAData, CardBData, CardCData, CardDData, SoulType } from "@/types/database.types";
-import { saveOnboardingCard, completeOnboarding } from "@/app/actions/onboarding";
+import { saveOnboardingCard, completeOnboarding, saveGuestOnboarding } from "@/app/actions/onboarding";
 import CardA from "./CardA";
 import CardB from "./CardB";
 import CardC from "./CardC";
@@ -12,13 +12,15 @@ import SoulTypeReveal from "./SoulTypeReveal";
 
 interface OnboardingFlowProps {
   initialProgress: OnboardingProgress | null;
+  isGuest: boolean;
 }
 
 /**
  * オンボーディングフロー管理コンポーネント
- * Card A〜Dを順番に表示し、完了時にソウルタイプを生成・表示する
+ * ゲストモード：localStorageに保存してAPIでソウルタイプ生成
+ * ログイン済み：DBに保存してサーバーアクションで生成
  */
-export default function OnboardingFlow({ initialProgress }: OnboardingFlowProps) {
+export default function OnboardingFlow({ initialProgress, isGuest }: OnboardingFlowProps) {
   const [currentCard, setCurrentCard] = useState(
     initialProgress?.current_card ?? 0
   );
@@ -38,54 +40,92 @@ export default function OnboardingFlow({ initialProgress }: OnboardingFlowProps)
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // カード完了ハンドラ
+  // ログイン済み：localStorageにゲストデータがあれば自動保存して完了
+  useEffect(() => {
+    if (!isGuest && currentCard === 0) {
+      const guestCardsStr = localStorage.getItem("az_guest_cards");
+      const guestSoulTypeStr = localStorage.getItem("az_guest_soul_type");
+
+      if (guestCardsStr && guestSoulTypeStr) {
+        setIsGenerating(true);
+        const guestCards = JSON.parse(guestCardsStr);
+        const guestSoulType = JSON.parse(guestSoulTypeStr);
+
+        saveGuestOnboarding(guestCards, guestSoulType).then((result) => {
+          if (result.error) {
+            setError(result.error);
+          } else {
+            localStorage.removeItem("az_guest_cards");
+            localStorage.removeItem("az_guest_soul_type");
+            setGeneratedSoulType(result.soulType!);
+          }
+          setIsGenerating(false);
+        });
+      }
+    }
+  }, [isGuest, currentCard]);
+
+  // カード完了ハンドラ（ゲストはstate更新のみ、ログイン済みはDB保存）
   async function handleCardAComplete(data: CardAData) {
-    await saveOnboardingCard(1, data);
+    if (!isGuest) await saveOnboardingCard(1, data);
     setCardAData(data);
     setCurrentCard(1);
   }
 
   async function handleCardBComplete(data: CardBData) {
-    await saveOnboardingCard(2, data);
+    if (!isGuest) await saveOnboardingCard(2, data);
     setCardBData(data);
     setCurrentCard(2);
   }
 
   async function handleCardCComplete(data: CardCData) {
-    await saveOnboardingCard(3, data);
+    if (!isGuest) await saveOnboardingCard(3, data);
     setCardCData(data);
     setCurrentCard(3);
   }
 
   async function handleCardDComplete(data: CardDData) {
-    await saveOnboardingCard(4, data);
+    if (!isGuest) await saveOnboardingCard(4, data);
     setCardDData(data);
-
-    // 全カード完了：ソウルタイプを生成
     setIsGenerating(true);
     setCurrentCard(4);
 
-    const result = await completeOnboarding(
-      cardAData!,
-      cardBData!,
-      cardCData!,
-      data
-    );
+    if (isGuest) {
+      // ゲストモード：APIを呼び出してlocalStorageに保存
+      const guestCards = { cardA: cardAData!, cardB: cardBData!, cardC: cardCData!, cardD: data };
+      localStorage.setItem("az_guest_cards", JSON.stringify(guestCards));
 
-    if (result.error) {
-      setError(result.error);
-      setIsGenerating(false);
+      const res = await fetch("/api/generate-soul-type", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(guestCards),
+      });
+      const result = await res.json();
+
+      if (result.error) {
+        setError(result.error);
+      } else {
+        localStorage.setItem("az_guest_soul_type", JSON.stringify(result.soulType));
+        setGeneratedSoulType(result.soulType);
+      }
     } else {
-      setGeneratedSoulType(result.soulType);
-      setIsGenerating(false);
+      // ログイン済み：サーバーアクションで生成・保存
+      const result = await completeOnboarding(cardAData!, cardBData!, cardCData!, data);
+
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setGeneratedSoulType(result.soulType!);
+      }
     }
+
+    setIsGenerating(false);
   }
 
-  // 進捗インジケーター
   const progress = ((currentCard) / 4) * 100;
 
   if (generatedSoulType) {
-    return <SoulTypeReveal soulType={generatedSoulType} />;
+    return <SoulTypeReveal soulType={generatedSoulType} isGuest={isGuest} />;
   }
 
   return (
