@@ -98,6 +98,15 @@ export default function LoginPage() {
             新規登録
           </Link>
         </p>
+
+        <div className="mt-4 text-center">
+          <Link
+            href="/onboarding"
+            className="text-az-subtle/70 text-xs underline hover:text-az-subtle transition-colors"
+          >
+            登録なしでまず診断してみる →
+          </Link>
+        </div>
       </div>
     </div>
   );
