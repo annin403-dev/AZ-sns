@@ -13,99 +13,165 @@
   body {
     max-width: 100vw;
     overflow-x: hidden;
-    background-color: #0a0a0f;
-    color: #e8e8f0;
+    /* 明るいベースカラー */
+    background-color: #FAF9FF;
+    color: #1C1A2E;
+    font-size: 16px;
+    line-height: 1.6;
   }
 
-  /* スクロールバーのスタイル */
+  /* スクロールバー（シンプル） */
   ::-webkit-scrollbar {
     width: 4px;
   }
-
   ::-webkit-scrollbar-track {
-    background: #0a0a0f;
+    background: #FAF9FF;
   }
-
   ::-webkit-scrollbar-thumb {
-    background: #2a2a3d;
+    background: #E8E4F8;
     border-radius: 2px;
   }
 }
 
 @layer components {
-  /* グロー効果のあるボタン */
-  .btn-glow {
-    @apply relative overflow-hidden transition-all duration-300;
-    box-shadow: 0 0 20px rgba(96, 96, 240, 0.3);
+  /* ─────────────────────────────────────
+     カード（基本）
+     やわらかい影と大きめ角丸
+  ───────────────────────────────────── */
+  .card {
+    @apply bg-az-surface rounded-2xl shadow-card p-4;
+    border: 1px solid #E8E4F8;
   }
 
-  .btn-glow:hover {
-    box-shadow: 0 0 40px rgba(96, 96, 240, 0.6);
+  .card-lg {
+    @apply bg-az-surface rounded-3xl shadow-card p-5;
+    border: 1px solid #E8E4F8;
+  }
+
+  /* ─────────────────────────────────────
+     ボタン（プライマリ）
+     バイオレット・大きめ・親指タップ向け
+  ───────────────────────────────────── */
+  .btn-primary {
+    @apply w-full py-4 px-6 rounded-2xl font-semibold text-white text-base
+           transition-all duration-200 active:scale-95;
+    background-color: #7C5CDB;
+    box-shadow: 0 4px 14px rgba(124, 92, 219, 0.30);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(124, 92, 219, 0.40);
     transform: translateY(-1px);
   }
 
-  .btn-glow:active {
-    transform: translateY(0);
+  /* セカンダリボタン（アウトライン） */
+  .btn-secondary {
+    @apply w-full py-4 px-6 rounded-2xl font-semibold text-az-primary text-base
+           bg-az-primary-light transition-all duration-200 active:scale-95;
+    border: 1.5px solid #7C5CDB;
   }
 
-  /* カードスタイル */
-  .card-surface {
-    @apply bg-az-surface border border-az-border rounded-2xl;
+  /* ゴーストボタン（文字のみ） */
+  .btn-ghost {
+    @apply py-3 px-4 rounded-xl font-medium text-az-subtle text-sm
+           transition-all duration-200 active:scale-95;
   }
 
-  /* ソウルタイプの光輪 */
-  .soul-glow {
-    box-shadow: 0 0 30px rgba(96, 96, 240, 0.4), 0 0 60px rgba(192, 96, 240, 0.2);
-  }
-
-  /* 達成エフェクト */
-  .achievement-shine {
-    background: linear-gradient(
-      135deg,
-      rgba(240, 192, 96, 0.2) 0%,
-      rgba(240, 192, 96, 0.05) 50%,
-      rgba(240, 192, 96, 0.2) 100%
-    );
-    border: 1px solid rgba(240, 192, 96, 0.4);
-  }
-
-  /* 選択肢タップボタン */
+  /* ─────────────────────────────────────
+     診断の選択肢ボタン
+     1問1画面で大きく表示
+  ───────────────────────────────────── */
   .choice-btn {
-    @apply w-full text-left px-4 py-3 rounded-xl border border-az-border
-           bg-az-muted text-az-text transition-all duration-200
-           hover:border-az-glow hover:bg-az-glow/10 active:scale-95;
+    @apply w-full text-left px-5 py-4 rounded-2xl text-base text-az-text
+           transition-all duration-200 active:scale-95;
+    border: 2px solid #E8E4F8;
+    background-color: #FFFFFF;
   }
-
+  .choice-btn:hover {
+    border-color: #7C5CDB;
+    background-color: #F3F1FC;
+  }
   .choice-btn.selected {
-    @apply border-az-glow bg-az-glow/20 text-white;
-    box-shadow: 0 0 15px rgba(96, 96, 240, 0.3);
+    border-color: #7C5CDB;
+    background-color: #F3F1FC;
+    color: #1C1A2E;
+    box-shadow: 0 0 0 3px rgba(124, 92, 219, 0.15);
   }
 
-  /* ボトムナビゲーション */
+  /* ─────────────────────────────────────
+     ボトムナビゲーション
+     白背景・薄いボーダー・セーフエリア対応
+  ───────────────────────────────────── */
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 bg-az-surface/95 backdrop-blur-xl
-           border-t border-az-border z-50;
+    @apply fixed bottom-0 left-0 right-0 bg-az-surface z-50;
+    border-top: 1px solid #E8E4F8;
+    /* iPhoneのホームインジケーター分の余白 */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ─────────────────────────────────────
+     タグ・バッジ
+  ───────────────────────────────────── */
+  .tag {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    background-color: #EDE9F9;
+    color: #7C5CDB;
+  }
+
+  /* ─────────────────────────────────────
+     進捗バー（診断・クエスト）
+  ───────────────────────────────────── */
+  .progress-bar-bg {
+    @apply w-full h-2 rounded-full;
+    background-color: #E8E4F8;
+  }
+  .progress-bar-fill {
+    @apply h-2 rounded-full transition-all duration-500;
+    background: linear-gradient(90deg, #7C5CDB, #9B72E6);
+  }
+
+  /* ─────────────────────────────────────
+     Luck Lv カード（ゴールドアクセント）
+  ───────────────────────────────────── */
+  .luck-card {
+    @apply rounded-2xl p-4;
+    background: linear-gradient(135deg, #FFFBF0, #FEF5E4);
+    border: 1.5px solid #F5D98B;
+  }
+
+  /* ─────────────────────────────────────
+     モーダル（下からスライドアップ）
+  ───────────────────────────────────── */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-end;
+    background-color: rgba(28, 26, 46, 0.40);
+  }
+  .modal-sheet {
+    @apply w-full bg-az-surface rounded-t-3xl p-6 pb-8 animate-slide-up;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ─────────────────────────────────────
+     セクションタイトル
+  ───────────────────────────────────── */
+  .section-title {
+    @apply text-sm font-semibold tracking-wide;
+    color: #7B78A0;
   }
 }
 
 @layer utilities {
-  /* テキストグロー */
-  .text-glow {
-    text-shadow: 0 0 20px rgba(96, 96, 240, 0.8);
+  /* スマホのセーフエリア対応 */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
-  .text-gold-glow {
-    text-shadow: 0 0 20px rgba(240, 192, 96, 0.8);
-  }
-
-  /* パーティクルアニメーション */
-  .particle-burst {
-    position: relative;
-  }
-
-  .particle-burst::before {
-    content: "✨";
-    position: absolute;
-    animation: particle 1s ease-out forwards;
+  /* タップ時のハイライトを消す（スマホ） */
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
   }
 }
