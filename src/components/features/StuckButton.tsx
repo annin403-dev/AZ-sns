@@ -1,10 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { getAlternativeViews, saveStuckRecord } from "@/app/actions/ai-coach";
+import { saveStuckRecord } from "@/app/actions/ai-coach";
 
-/** 状況の選択肢 */
+/**
+ * 詰まりボタン（CBT 5ステップフロー）
+ * ライトテーマ版 - 画面右下に常時表示
+ *
+ * ステップ：
+ * 1. 今何が起きてる？（状況選択）
+ * 2. どんな感情？（感情選択）
+ * 3. 頭に浮かんだ考えは？（自動思考選択）
+ * 4. 別の見方は？（認知の書き換え選択）
+ * 5. 次の最小行動は？（行動選択）
+ */
+
 const SITUATIONS = [
   "タスクに手が付かない",
   "SNSを見て気分が下がった",
@@ -14,7 +24,6 @@ const SITUATIONS = [
   "誰かにイライラしている",
 ];
 
-/** 感情の選択肢 */
 const EMOTIONS = [
   { emoji: "😔", label: "落ち込み" },
   { emoji: "😰", label: "不安" },
@@ -24,7 +33,6 @@ const EMOTIONS = [
   { emoji: "😞", label: "後悔" },
 ];
 
-/** 自動思考の選択肢 */
 const AUTO_THOUGHTS = [
   "自分はダメだ",
   "また失敗した",
@@ -34,7 +42,15 @@ const AUTO_THOUGHTS = [
   "疲れた・もう無理",
 ];
 
-/** 次の行動の選択肢 */
+const ALTERNATIVE_VIEWS = [
+  "今は充電が必要な時期かもしれない",
+  "完璧じゃなくても、進めば十分",
+  "うまくいかないことも、情報のひとつ",
+  "誰でも止まる日がある",
+  "小さく試せばリスクは小さい",
+  "今日できたことを1つ見つけてみよう",
+];
+
 const NEXT_ACTIONS = [
   "1分だけ深呼吸する",
   "タスクを1つだけ開く",
@@ -44,270 +60,177 @@ const NEXT_ACTIONS = [
   "誰かに「ありがとう」と言う",
 ];
 
-type Step = "situation" | "emotion" | "auto_thought" | "alternative" | "action" | "done";
+type Step = "situation" | "emotion" | "thought" | "reframe" | "action" | "done";
 
-/**
- * 詰まりボタン（Thought Recordフロー）
- * 画面右下に常時表示。タップで5ステップのCBTフローが起動
- */
+const STEP_CONFIG: Record<Step, { title: string; sub: string }> = {
+  situation: { title: "今、何が起きてる？",     sub: "近いものを選んで" },
+  emotion:   { title: "そのとき、どんな感情？", sub: "正直に選んでね" },
+  thought:   { title: "頭に浮かんだ考えは？",   sub: "自動的に出てきた言葉" },
+  reframe:   { title: "別の見方はどれ？",       sub: "ちょっと違う角度から見てみよう" },
+  action:    { title: "次の2分でできることは？", sub: "小さくていい" },
+  done:      { title: "よくできました ✨",       sub: "記録完了" },
+};
+
+const STEPS: Step[] = ["situation", "emotion", "thought", "reframe", "action"];
+
 export default function StuckButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<Step>("situation");
-  const [situation, setSituation] = useState("");
-  const [emotion, setEmotion] = useState("");
-  const [autoThought, setAutoThought] = useState("");
-  const [alternativeViews, setAlternativeViews] = useState<string[]>([]);
-  const [selectedView, setSelectedView] = useState("");
+  const [step, setStep]     = useState<Step>("situation");
+  const [situation, setSituation]   = useState("");
+  const [emotion, setEmotion]       = useState("");
+  const [thought, setThought]       = useState("");
+  const [reframe, setReframe]       = useState("");
   const [nextAction, setNextAction] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  function resetFlow() {
-    setStep("situation");
-    setSituation("");
-    setEmotion("");
-    setAutoThought("");
-    setAlternativeViews([]);
-    setSelectedView("");
-    setNextAction("");
-    setIsOpen(false);
+  function reset() {
+    setStep("situation"); setSituation(""); setEmotion("");
+    setThought(""); setReframe(""); setNextAction(""); setIsOpen(false);
   }
 
-  async function handleGetAlternatives() {
-    setLoading(true);
-    const result = await getAlternativeViews(situation, emotion, autoThought);
-    if (result.views) {
-      setAlternativeViews(result.views);
-      setStep("alternative");
-    }
-    setLoading(false);
-  }
-
-  async function handleComplete() {
+  async function handleAction(action: string) {
+    setNextAction(action);
     await saveStuckRecord({
-      situation,
-      emotion,
-      auto_thought: autoThought,
-      alternative_view: selectedView,
-      next_action: nextAction,
+      situation, emotion,
+      auto_thought: thought,
+      alternative_view: reframe,
+      next_action: action,
     });
     setStep("done");
   }
 
-  const stepConfig: Record<Step, { title: string; subtitle: string }> = {
-    situation: {
-      title: "今、何が起きてる？",
-      subtitle: "状況を選んでください",
-    },
-    emotion: {
-      title: "そのとき、どんな感情？",
-      subtitle: "正直に選んで",
-    },
-    auto_thought: {
-      title: "頭に浮かんだ考えは？",
-      subtitle: "自動的に出てきた言葉",
-    },
-    alternative: {
-      title: "別の見方はどれ？",
-      subtitle: "AIが3つ提案します",
-    },
-    action: {
-      title: "次の2分でできることは？",
-      subtitle: "小さくていい",
-    },
-    done: { title: "よくできました ✨", subtitle: "記録完了" },
-  };
-
-  const currentConfig = stepConfig[step];
+  const progress = STEPS.indexOf(step) / STEPS.length;
+  const config   = STEP_CONFIG[step];
 
   return (
     <>
-      {/* 詰まりボタン（右下固定） */}
+      {/* ─── 詰まりボタン（右下固定） ─── */}
       <button
         onClick={() => setIsOpen(true)}
         className="fixed right-4 bottom-24 z-40 w-14 h-14 rounded-full
-                   bg-az-flame/90 backdrop-blur-sm shadow-lg
-                   flex items-center justify-center
-                   hover:bg-az-flame active:scale-95 transition-all duration-200"
-        style={{ boxShadow: "0 0 20px rgba(240, 96, 64, 0.5)" }}
+                   flex items-center justify-center shadow-lg no-tap-highlight
+                   transition-all duration-200 active:scale-95"
+        style={{
+          background: "#F05252",
+          boxShadow: "0 4px 16px rgba(240,82,82,0.40)",
+        }}
         aria-label="詰まりボタン"
       >
         <span className="text-xl">🆘</span>
       </button>
 
-      {/* モーダル */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-end"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+      {/* ─── モーダル ─── */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-end">
+          {/* オーバーレイ */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(28,26,46,0.40)" }}
+            onClick={reset}
+          />
+
+          {/* シート（下から） */}
+          <div
+            className="relative w-full rounded-t-3xl p-6 pb-10 animate-slide-up"
+            style={{
+              background: "#FFFFFF",
+              maxHeight: "85vh",
+              overflowY: "auto",
+            }}
           >
-            {/* オーバーレイ */}
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={resetFlow}
-            />
+            {/* ハンドル */}
+            <div className="w-10 h-1.5 rounded-full mx-auto mb-5" style={{ background: "#E8E4F8" }} />
 
-            {/* シート */}
-            <motion.div
-              className="relative w-full max-h-[85vh] bg-az-surface rounded-t-3xl
-                         border-t border-az-border overflow-y-auto"
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25 }}
-            >
-              <div className="p-6 space-y-5">
-                {/* ハンドル */}
-                <div className="w-10 h-1 bg-az-border rounded-full mx-auto" />
-
-                {/* ヘッダー */}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-az-flame text-lg">🆘</span>
-                    <h2 className="text-az-text font-bold text-lg">
-                      {currentConfig.title}
-                    </h2>
-                  </div>
-                  <p className="text-az-subtle text-sm">{currentConfig.subtitle}</p>
-                </div>
-
-                {/* ステップ進捗 */}
-                <div className="flex gap-1">
-                  {(["situation", "emotion", "auto_thought", "alternative", "action"] as Step[]).map(
-                    (s, i) => (
-                      <div
-                        key={s}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          step === "done" ||
-                          ["situation", "emotion", "auto_thought", "alternative", "action"].indexOf(step) > i
-                            ? "bg-az-aurora"
-                            : step === s
-                            ? "bg-az-flame"
-                            : "bg-az-muted"
-                        }`}
-                      />
-                    )
-                  )}
-                </div>
-
-                {/* ステップコンテンツ */}
-                {step === "situation" && (
-                  <div className="space-y-2">
-                    {SITUATIONS.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => {
-                          setSituation(s);
-                          setStep("emotion");
-                        }}
-                        className="choice-btn text-sm"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {step === "emotion" && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {EMOTIONS.map((e) => (
-                      <button
-                        key={e.label}
-                        onClick={() => {
-                          setEmotion(e.label);
-                          setStep("auto_thought");
-                        }}
-                        className="flex flex-col items-center gap-1 p-3 rounded-xl
-                                   border border-az-border bg-az-muted
-                                   hover:border-az-flame/40 active:scale-95 transition-all"
-                      >
-                        <span className="text-2xl">{e.emoji}</span>
-                        <span className="text-xs text-az-subtle">{e.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {step === "auto_thought" && (
-                  <div className="space-y-2">
-                    {AUTO_THOUGHTS.map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => {
-                          setAutoThought(t);
-                          handleGetAlternatives();
-                        }}
-                        className="choice-btn text-sm"
-                      >
-                        {t}
-                      </button>
-                    ))}
-                    {loading && (
-                      <div className="flex justify-center py-4">
-                        <div className="w-6 h-6 border-2 border-az-glow border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {step === "alternative" && (
-                  <div className="space-y-2">
-                    {alternativeViews.map((view) => (
-                      <button
-                        key={view}
-                        onClick={() => {
-                          setSelectedView(view);
-                          setStep("action");
-                        }}
-                        className="choice-btn text-sm"
-                      >
-                        💡 {view}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {step === "action" && (
-                  <div className="space-y-2">
-                    {NEXT_ACTIONS.map((action) => (
-                      <button
-                        key={action}
-                        onClick={() => {
-                          setNextAction(action);
-                          handleComplete();
-                        }}
-                        className="choice-btn text-sm"
-                      >
-                        ▶ {action}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {step === "done" && (
-                  <div className="text-center py-6 space-y-4">
-                    <div className="text-6xl">🌟</div>
-                    <p className="text-az-text font-semibold">
-                      詰まりを乗り越えた証拠が<br />記録されました
-                    </p>
-                    <p className="text-az-subtle text-sm">
-                      次の行動：<span className="text-az-aurora font-medium">{nextAction}</span>
-                    </p>
-                    <button
-                      onClick={resetFlow}
-                      className="w-full py-3 rounded-xl bg-az-glow text-white font-semibold btn-glow"
-                    >
-                      閉じる
-                    </button>
-                  </div>
-                )}
+            {/* ヘッダー */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">🆘</span>
+                <h2 className="text-lg font-bold" style={{ color: "#1C1A2E" }}>{config.title}</h2>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <p className="text-sm" style={{ color: "#7B78A0" }}>{config.sub}</p>
+            </div>
+
+            {/* 進捗バー */}
+            {step !== "done" && (
+              <div className="w-full h-1.5 rounded-full mb-5" style={{ background: "#E8E4F8" }}>
+                <div
+                  className="h-1.5 rounded-full transition-all duration-500"
+                  style={{ width: `${progress * 100}%`, background: "#F05252" }}
+                />
+              </div>
+            )}
+
+            {/* ── ステップ1：状況 ── */}
+            {step === "situation" && (
+              <div className="space-y-2">
+                {SITUATIONS.map((s) => (
+                  <button key={s} onClick={() => { setSituation(s); setStep("emotion"); }}
+                    className="choice-btn text-sm">{s}</button>
+                ))}
+              </div>
+            )}
+
+            {/* ── ステップ2：感情 ── */}
+            {step === "emotion" && (
+              <div className="grid grid-cols-3 gap-2">
+                {EMOTIONS.map((e) => (
+                  <button key={e.label}
+                    onClick={() => { setEmotion(e.label); setStep("thought"); }}
+                    className="flex flex-col items-center gap-1 p-3 rounded-2xl no-tap-highlight active:scale-95 transition-all"
+                    style={{ background: "#F3F1FC", border: "1.5px solid #E8E4F8" }}>
+                    <span className="text-2xl">{e.emoji}</span>
+                    <span className="text-xs font-medium" style={{ color: "#7B78A0" }}>{e.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── ステップ3：自動思考 ── */}
+            {step === "thought" && (
+              <div className="space-y-2">
+                {AUTO_THOUGHTS.map((t) => (
+                  <button key={t} onClick={() => { setThought(t); setStep("reframe"); }}
+                    className="choice-btn text-sm">{t}</button>
+                ))}
+              </div>
+            )}
+
+            {/* ── ステップ4：リフレーム ── */}
+            {step === "reframe" && (
+              <div className="space-y-2">
+                {ALTERNATIVE_VIEWS.map((v) => (
+                  <button key={v} onClick={() => { setReframe(v); setStep("action"); }}
+                    className="choice-btn text-sm">💡 {v}</button>
+                ))}
+              </div>
+            )}
+
+            {/* ── ステップ5：次の行動 ── */}
+            {step === "action" && (
+              <div className="space-y-2">
+                {NEXT_ACTIONS.map((a) => (
+                  <button key={a} onClick={() => handleAction(a)}
+                    className="choice-btn text-sm">▶ {a}</button>
+                ))}
+              </div>
+            )}
+
+            {/* ── 完了 ── */}
+            {step === "done" && (
+              <div className="text-center py-6 space-y-4">
+                <div className="text-5xl">🌟</div>
+                <p className="text-base font-semibold" style={{ color: "#1C1A2E" }}>
+                  詰まりを乗り越えた記録が<br />残りました
+                </p>
+                <div className="rounded-2xl p-4" style={{ background: "#F3F1FC" }}>
+                  <p className="text-xs font-medium mb-1" style={{ color: "#7B78A0" }}>次の行動</p>
+                  <p className="font-medium" style={{ color: "#7C5CDB" }}>{nextAction}</p>
+                </div>
+                <button onClick={reset} className="btn-primary no-tap-highlight">閉じる</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

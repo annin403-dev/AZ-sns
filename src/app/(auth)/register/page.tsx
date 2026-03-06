@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { register } from "@/app/actions/auth";
 
 /**
- * 新規登録ページ
+ * 新規登録ページ（ライトテーマ）
+ * URLパラメータ ?type=Pioneer&aura=挑戦 で診断結果を受け取る
  */
-export default function RegisterPage() {
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const diagType = searchParams.get("type") || "";
+  const diagAura = searchParams.get("aura") || "";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -22,133 +27,73 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-mystic flex flex-col items-center justify-center px-4 py-10">
-      {/* ロゴ */}
+    <div className="min-h-screen flex flex-col items-center justify-center px-5 py-12" style={{ background: "#FAF9FF" }}>
       <div className="mb-8 text-center">
-        <h1 className="text-5xl font-bold text-az-gold text-gold-glow mb-2">
-          AZ
-        </h1>
-        <p className="text-az-subtle text-sm">〜アズ〜</p>
-        <p className="text-az-text/60 text-xs mt-2">
-          あなただけの成長の旅が始まる
+        <h1 className="text-5xl font-bold mb-1" style={{ color: "#7C5CDB" }}>AZ</h1>
+        <p className="text-sm" style={{ color: "#7B78A0" }}>
+          {diagType ? "診断完了！アカウントを作って続けよう" : "シーカーの旅をはじめよう"}
         </p>
       </div>
 
-      {/* 登録フォーム */}
+      {diagType && diagAura && (
+        <div className="w-full max-w-sm mb-5 rounded-2xl px-4 py-3 text-center"
+             style={{ background: "#F3F1FC", border: "1.5px solid #C8BEF0" }}>
+          <p className="text-xs font-medium mb-0.5" style={{ color: "#7B78A0" }}>あなたのAZタイプ</p>
+          <p className="font-bold" style={{ color: "#7C5CDB" }}>{diagType} × {diagAura}</p>
+          <p className="text-xs mt-0.5" style={{ color: "#B0ACC8" }}>登録後に取扱説明書を完成させよう</p>
+        </div>
+      )}
+
       <div className="w-full max-w-sm">
-        <div className="card-surface p-6 space-y-5">
-          <h2 className="text-lg font-semibold text-center text-az-text">
-            旅を始める
-          </h2>
-
+        <div className="card-lg">
           <form action={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm text-az-subtle mb-1.5">
-                ユーザー名
-              </label>
-              <input
-                type="text"
-                name="username"
-                required
-                pattern="[a-zA-Z0-9_]+"
-                minLength={3}
-                maxLength={20}
-                className="w-full px-4 py-3 rounded-xl bg-az-muted border border-az-border
-                           text-az-text placeholder-az-subtle/50 focus:outline-none
-                           focus:border-az-glow focus:ring-1 focus:ring-az-glow/30
-                           transition-all duration-200"
-                placeholder="your_username"
-              />
-              <p className="text-az-subtle/60 text-xs mt-1">
-                英数字とアンダースコアのみ（3〜20文字）
-              </p>
-            </div>
+            <input type="hidden" name="job_type" value={diagType} />
+            <input type="hidden" name="aura_type" value={diagAura} />
 
-            <div>
-              <label className="block text-sm text-az-subtle mb-1.5">
-                表示名
-              </label>
-              <input
-                type="text"
-                name="display_name"
-                maxLength={30}
-                className="w-full px-4 py-3 rounded-xl bg-az-muted border border-az-border
-                           text-az-text placeholder-az-subtle/50 focus:outline-none
-                           focus:border-az-glow focus:ring-1 focus:ring-az-glow/30
-                           transition-all duration-200"
-                placeholder="あなたの名前"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-az-subtle mb-1.5">
-                メールアドレス
-              </label>
-              <input
-                type="email"
-                name="email"
-                required
-                className="w-full px-4 py-3 rounded-xl bg-az-muted border border-az-border
-                           text-az-text placeholder-az-subtle/50 focus:outline-none
-                           focus:border-az-glow focus:ring-1 focus:ring-az-glow/30
-                           transition-all duration-200"
-                placeholder="your@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-az-subtle mb-1.5">
-                パスワード
-              </label>
-              <input
-                type="password"
-                name="password"
-                required
-                minLength={8}
-                className="w-full px-4 py-3 rounded-xl bg-az-muted border border-az-border
-                           text-az-text placeholder-az-subtle/50 focus:outline-none
-                           focus:border-az-glow focus:ring-1 focus:ring-az-glow/30
-                           transition-all duration-200"
-                placeholder="8文字以上"
-              />
-            </div>
+            {[
+              { label: "表示名", name: "display_name", type: "text", placeholder: "あなたの名前（後から変更可）", maxLength: 30 },
+              { label: "ユーザー名", name: "username", type: "text", placeholder: "英数字・_(3〜20文字)", minLength: 3, maxLength: 20, pattern: "[a-zA-Z0-9_]+" },
+              { label: "メールアドレス", name: "email", type: "email", placeholder: "your@email.com", autoComplete: "email" },
+              { label: "パスワード", name: "password", type: "password", placeholder: "8文字以上", minLength: 8 },
+            ].map((field) => (
+              <div key={field.name}>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "#7B78A0" }}>{field.label}</label>
+                <input
+                  {...field}
+                  required
+                  className="w-full px-4 py-3.5 rounded-xl text-base outline-none"
+                  style={{ background: "#F3F1FC", border: "1.5px solid #E8E4F8", color: "#1C1A2E" }}
+                  onFocus={(e) => { e.target.style.borderColor = "#7C5CDB"; e.target.style.boxShadow = "0 0 0 3px rgba(124,92,219,0.12)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "#E8E4F8"; e.target.style.boxShadow = "none"; }}
+                />
+              </div>
+            ))}
 
             {error && (
-              <div className="text-red-400 text-sm text-center py-2 px-3 bg-red-500/10 rounded-lg border border-red-500/20">
+              <div className="py-3 px-4 rounded-xl text-sm text-center" style={{ background: "#FEE8E8", color: "#C0392B" }}>
                 {error}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 rounded-xl font-semibold text-white
-                         bg-az-glow btn-glow disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "旅の準備中..." : "旅を始める ✨"}
+            <button type="submit" disabled={loading} className="btn-primary no-tap-highlight" style={{ opacity: loading ? 0.7 : 1 }}>
+              {loading ? "準備中…" : "アカウントを作る ✨"}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-az-subtle text-sm mt-6">
+        <p className="text-center text-sm mt-6" style={{ color: "#7B78A0" }}>
           すでにアカウントがある？{" "}
-          <Link
-            href="/login"
-            className="text-az-glow hover:text-az-mystic transition-colors"
-          >
-            ログイン
-          </Link>
+          <Link href="/login" className="font-semibold" style={{ color: "#7C5CDB" }}>ログイン</Link>
         </p>
-
-        <div className="mt-4 text-center">
-          <Link
-            href="/onboarding"
-            className="text-az-subtle/70 text-xs underline hover:text-az-subtle transition-colors"
-          >
-            登録なしでまず診断してみる →
-          </Link>
-        </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div style={{ background: "#FAF9FF", minHeight: "100vh" }} />}>
+      <RegisterForm />
+    </Suspense>
   );
 }

@@ -3,208 +3,81 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { generateSoulType } from "@/lib/ai/coach";
-import { CardAData, CardBData, CardCData, CardDData } from "@/types/database.types";
+
+/** 深掘り診断の6カードデータ */
+export interface DeepDiagnosisData {
+  // Card A: エネルギー棚卸し
+  energize: string;       // 没頭できること
+  drains: string;         // 消耗すること
+  // Card B: 得意の正体
+  strengths: string[];    // 強み3つ
+  // Card C: 苦手の正体
+  weaknesses: string[];   // 苦手3つ
+  // Card D: やる気の燃料（SDT）
+  autonomy: number;       // 自律性スコア 1-5
+  competence: number;     // 有能感スコア 1-5
+  relatedness: number;    // 関係性スコア 1-5
+  // Card E: 勝てる環境（COM-B）
+  winContext: string;     // 勝てる状況テキスト
+  // Card F: 自己定義
+  selfDef: string;        // 自己定義一文
+  noList: string[];       // やらないこと3つ
+}
 
 /**
- * オンボーディングのカード進捗を保存する
+ * 深掘り診断を完了・保存してホームへ
  */
-export async function saveOnboardingCard(
-  cardNumber: number,
-  data: CardAData | CardBData | CardCData | CardDData
-) {
+export async function completeDeepDiagnosis(data: DeepDiagnosisData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "ログインが必要です" };
 
-  if (!user) {
-    return { error: "ログインが必要です" };
-  }
+  // SDT優位型を判定
+  const sdtMax = Math.max(data.autonomy, data.competence, data.relatedness);
+  let motivationType = "自律性型";
+  if (sdtMax === data.competence) motivationType = "有能感型";
+  if (sdtMax === data.relatedness) motivationType = "関係性型";
 
-  const cardKey = `card_${["a", "b", "c", "d"][cardNumber - 1]}_data`;
+  // 推進剤マップ（動くエネルギー）
+  const propellantMap = {
+    summary: `${data.energize}が推進剤。SDTは${motivationType}。`,
+    items: [data.energize, `SDT優位：${motivationType}`],
+    sdt: { autonomy: data.autonomy, competence: data.competence, relatedness: data.relatedness },
+  };
 
-  const { error } = await supabase
-    .from("onboarding_progress")
-    .update({
-      [cardKey]: data,
-      current_card: cardNumber,
-    })
-    .eq("user_id", user.id);
+  // 停止装置マップ（止まるトリガー）
+  const blockerMap = {
+    summary: data.drains,
+    items: [data.drains, ...data.weaknesses],
+  };
+
+  // 勝てる条件マップ
+  const winningCondition = {
+    summary: data.winContext,
+    items: [data.winContext, ...data.strengths],
+  };
+
+  // az_profilesに保存（upsert = あれば更新・なければ作成）
+  const { error } = await supabase.from("az_profiles").upsert({
+    user_id: user.id,
+    propellant_map: propellantMap,
+    blocker_map: blockerMap,
+    winning_condition: winningCondition,
+    self_definition: data.selfDef,
+    no_list: data.noList.filter(Boolean),
+  });
 
   if (error) {
-    console.error("オンボーディング保存エラー:", error);
-    return { error: "保存に失敗しました" };
+    console.error("az_profiles保存エラー:", error);
+    // テーブルがまだない場合でも続行（localStorageに保存済み）
   }
 
-  return { success: true };
-}
+  // onboarding_doneをtrueに
+  await supabase
+    .from("profiles")
+    .update({ onboarding_done: true })
+    .eq("id", user.id);
 
-/**
- * オンボーディングを完了し、ソウルタイプを生成する
- */
-export async function completeOnboarding(
-  cardA: CardAData,
-  cardB: CardBData,
-  cardC: CardCData,
-  cardD: CardDData
-) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "ログインが必要です" };
-  }
-
-  try {
-    // AIでソウルタイプを生成
-    const soulTypeData = await generateSoulType(cardA, cardB, cardC, cardD);
-
-    // ソウルタイプをDBに保存
-    const { data: soulType, error: soulTypeError } = await supabase
-      .from("soul_types")
-      .upsert({
-        user_id: user.id,
-        ...soulTypeData,
-        energy_sources: cardA.energy_sources,
-        stop_triggers: cardB.stop_triggers,
-        motivation_type: getMotivationType(cardC),
-        goal_area: cardD.goal_area,
-        autonomy_score: cardC.autonomy_score,
-        competence_score: cardC.competence_score,
-        relatedness_score: cardC.relatedness_score,
-        is_complete: true,
-      })
-      .select()
-      .single();
-
-    if (soulTypeError) {
-      throw new Error("ソウルタイプの保存に失敗しました");
-    }
-
-    // プロフィールのsoul_type_idを更新
-    await supabase
-      .from("profiles")
-      .update({ soul_type_id: soulType.id })
-      .eq("id", user.id);
-
-    // オンボーディング完了を記録
-    await supabase
-      .from("onboarding_progress")
-      .update({
-        card_a_data: cardA,
-        card_b_data: cardB,
-        card_c_data: cardC,
-        card_d_data: cardD,
-        current_card: 4,
-        is_complete: true,
-      })
-      .eq("user_id", user.id);
-
-    revalidatePath("/", "layout");
-    return { success: true, soulType };
-  } catch (error) {
-    console.error("オンボーディング完了エラー:", error);
-    return { error: "ソウルタイプの生成に失敗しました" };
-  }
-}
-
-/**
- * SDTスコアから主要な燃料タイプを判定する
- */
-function getMotivationType(cardC: CardCData): string {
-  const { autonomy_score, competence_score, relatedness_score } = cardC;
-  const max = Math.max(autonomy_score, competence_score, relatedness_score);
-
-  if (max === autonomy_score) return "自律性型";
-  if (max === competence_score) return "有能感型";
-  return "関係性型";
-}
-
-/**
- * オンボーディングの進捗を取得する
- */
-export async function getOnboardingProgress() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  const { data } = await supabase
-    .from("onboarding_progress")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-
-  return data;
-}
-
-/**
- * ゲストの診断データを登録後にDBへ保存する
- */
-export async function saveGuestOnboarding(
-  cards: { cardA: CardAData; cardB: CardBData; cardC: CardCData; cardD: CardDData },
-  soulTypeData: {
-    type_name: string;
-    type_description: string;
-    strengths: string[];
-    growth_direction: string;
-  }
-) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "ログインが必要です" };
-  }
-
-  try {
-    const { cardA, cardB, cardC, cardD } = cards;
-
-    const autonomy = cardC.autonomy_score;
-    const competence = cardC.competence_score;
-    const relatedness = cardC.relatedness_score;
-    const max = Math.max(autonomy, competence, relatedness);
-    const motivationType = max === autonomy ? "自律性型" : max === competence ? "有能感型" : "関係性型";
-
-    const { data: soulType, error: soulTypeError } = await supabase
-      .from("soul_types")
-      .upsert({
-        user_id: user.id,
-        ...soulTypeData,
-        energy_sources: cardA.energy_sources,
-        stop_triggers: cardB.stop_triggers,
-        motivation_type: motivationType,
-        goal_area: cardD.goal_area,
-        autonomy_score: autonomy,
-        competence_score: competence,
-        relatedness_score: relatedness,
-        is_complete: true,
-      })
-      .select()
-      .single();
-
-    if (soulTypeError) throw new Error("ソウルタイプの保存に失敗しました");
-
-    await supabase
-      .from("profiles")
-      .update({ soul_type_id: soulType.id })
-      .eq("id", user.id);
-
-    await supabase
-      .from("onboarding_progress")
-      .update({
-        card_a_data: cardA,
-        card_b_data: cardB,
-        card_c_data: cardC,
-        card_d_data: cardD,
-        current_card: 4,
-        is_complete: true,
-      })
-      .eq("user_id", user.id);
-
-    revalidatePath("/", "layout");
-    return { success: true, soulType };
-  } catch (error) {
-    console.error("ゲストデータ保存エラー:", error);
-    return { error: "データの保存に失敗しました" };
-  }
+  revalidatePath("/", "layout");
+  redirect("/home");
 }
