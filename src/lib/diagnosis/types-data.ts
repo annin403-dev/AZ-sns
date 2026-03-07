@@ -25,10 +25,14 @@ export interface AZTypeData {
   jobType: JobType;
   jobNameJa: string;
   auraType: AuraType;
-  title: string;
-  description: string;
-  strengths: [string, string, string];
+  title: string;        // 内部管理用（表示しない）
   catchphrase: string;
+  description: string;  // あなたについて
+  strengths: [string, string, string];
+  trap?: string;        // ハマりやすい罠
+  howToWin?: string;    // うまくいく進み方
+  driver?: [string, string, string]; // 心が動く原動力
+  messageNow?: string;  // 今のあなたへの一言
   populationPercent: number;
   hpDefault: number;
   mpDefault: number;
@@ -43,12 +47,12 @@ export const JOB_TYPE_INFO: Record<
   { nameJa: string; emoji: string; baseDescription: string }
 > = {
   Pioneer: {
-    nameJa: "開拓者",
+    nameJa: "挑戦者",
     emoji: "⚡",
     baseDescription: "未知の領域に踏み込み、新しい道を切り開く",
   },
   Architect: {
-    nameJa: "設計者",
+    nameJa: "構築者",
     emoji: "🏗",
     baseDescription: "仕組みと構造を作り、物事を確実に動かす",
   },
@@ -58,17 +62,17 @@ export const JOB_TYPE_INFO: Record<
     baseDescription: "感性と発想で、世界にまだないものを生み出す",
   },
   Strategist: {
-    nameJa: "戦略家",
+    nameJa: "設計者",
     emoji: "🎯",
     baseDescription: "状況を読み、最短で目標に到達する道を描く",
   },
   Healer: {
-    nameJa: "癒し手",
+    nameJa: "奉仕者",
     emoji: "🌿",
     baseDescription: "深い共感と温かさで、人の心を回復させる",
   },
   Connector: {
-    nameJa: "つなぎ手",
+    nameJa: "つなぐ人",
     emoji: "🔗",
     baseDescription: "人と人、アイデアと現実をつなぎ、場を育てる",
   },
@@ -78,7 +82,7 @@ export const JOB_TYPE_INFO: Record<
     baseDescription: "深く掘り下げ、本質に到達しようとし続ける",
   },
   Storyteller: {
-    nameJa: "語り手",
+    nameJa: "語り部",
     emoji: "📖",
     baseDescription: "言葉と物語の力で、人の心を動かす",
   },
@@ -130,13 +134,28 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Pioneer_挑戦",
     jobType: "Pioneer",
-    jobNameJa: "開拓者",
+    jobNameJa: "挑戦者",
     auraType: "挑戦",
     title: "炎の開拓者",
+    catchphrase: "「やってみないとわからない」が、口癖じゃなくて本気の話。",
     description:
-      "誰も踏み込んでいない場所に最初に立ち、情熱の炎で道を切り開く。失敗を恐れず、むしろそれを栄養にして突き進む。",
-    strengths: ["圧倒的な行動力", "逆境での底力", "ゼロからイチを作る力"],
-    catchphrase: "まだ誰も行っていない、だから行く。",
+      "「まだ様子を見よう」という言葉を聞くたびに、なんとなく気持ちが離れていく。反対したいわけじゃないのに、「動かないことのリスク」の方が体にはっきり感じられて、でもそれをうまく説明できない、という経験がないですか。\n\nあなたにとって「前例がない」は、やってみる理由であってやらない理由じゃない。止まっている時間の方が、どこか落ち着かない。\n\n周りからは「決断が早い」「積極的」と言われる。でも本人からすると、特に勢いがあるわけじゃなくて、「まず動いてから考える」の方が自然に思えているだけだったりする。",
+    strengths: [
+      "「やってみないとわからない」を、本当に実行できる",
+      "不確かな状況でも、次の一手を出せる",
+      "壁にあたってもエネルギーが落ちない（むしろ整理されていく）",
+    ],
+    trap:
+      "気づくと、一人で走っている。後ろを振り返ったら、誰もついてきていなかった。置いていくつもりは、なかったのに。\n\nそれと、「次がある」と感じた瞬間、今やっていることへの熱がすっと落ちる。完成手前でエネルギーが別の方向を向いてしまって、気づくとやりかけのものが積み上がっている。",
+    howToWin:
+      "あなたが止まるのは「やる気がない時」じゃなく、「どこに向かっているかわからなくなった時」です。停滞を感じたら休もうとするより、「自分は何を証明したくてこれをやっているか」を3行でもいいから書き出す方が、早く回復する。\n\n人を巻き込む時、速度を合わせようとしなくていい。ただ、「地図を持てる人」を一人だけ近くに置くこと。あなたが向かう方向を言葉にして渡せる相手がいると、あなたの速度を落とさないまま、人がついてこれるようになる。",
+    driver: [
+      "誰も踏んでいない場所に、最初の足跡をつける感覚",
+      "「難しい」と言われたことを、静かに超えていくこと",
+      "自分の行動が、次の誰かの「ここまで来ていいんだ」という許可になること",
+    ],
+    messageNow:
+      "あなたが先に行くのは、勇気じゃなくて性分だと思っている。でも後から来る人には、それが勇気に見えている。",
     populationPercent: 5,
     hpDefault: 9,
     mpDefault: 7,
@@ -146,7 +165,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Pioneer_安定",
     jobType: "Pioneer",
-    jobNameJa: "開拓者",
+    jobNameJa: "挑戦者",
     auraType: "安定",
     title: "堅実な開拓者",
     description:
@@ -162,7 +181,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Pioneer_創造",
     jobType: "Pioneer",
-    jobNameJa: "開拓者",
+    jobNameJa: "挑戦者",
     auraType: "創造",
     title: "創造的開拓者",
     description:
@@ -178,7 +197,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Pioneer_探究",
     jobType: "Pioneer",
-    jobNameJa: "開拓者",
+    jobNameJa: "挑戦者",
     auraType: "探究",
     title: "知の開拓者",
     description:
@@ -194,7 +213,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Pioneer_奉仕",
     jobType: "Pioneer",
-    jobNameJa: "開拓者",
+    jobNameJa: "挑戦者",
     auraType: "奉仕",
     title: "先頭を走る開拓者",
     description:
@@ -212,7 +231,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Architect_挑戦",
     jobType: "Architect",
-    jobNameJa: "設計者",
+    jobNameJa: "構築者",
     auraType: "挑戦",
     title: "革命的設計者",
     description:
@@ -228,7 +247,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Architect_安定",
     jobType: "Architect",
-    jobNameJa: "設計者",
+    jobNameJa: "構築者",
     auraType: "安定",
     title: "堅牢な設計者",
     description:
@@ -244,7 +263,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Architect_創造",
     jobType: "Architect",
-    jobNameJa: "設計者",
+    jobNameJa: "構築者",
     auraType: "創造",
     title: "芸術的設計者",
     description:
@@ -260,7 +279,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Architect_探究",
     jobType: "Architect",
-    jobNameJa: "設計者",
+    jobNameJa: "構築者",
     auraType: "探究",
     title: "探究する設計者",
     description:
@@ -276,7 +295,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Architect_奉仕",
     jobType: "Architect",
-    jobNameJa: "設計者",
+    jobNameJa: "構築者",
     auraType: "奉仕",
     title: "人のための設計者",
     description:
@@ -329,10 +348,24 @@ export const AZ_TYPES: AZTypeData[] = [
     jobNameJa: "創造者",
     auraType: "創造",
     title: "純粋な創造者",
+    catchphrase: "作らないと、どこか詰まっている感じがする。",
     description:
-      "創ることそのものが喜び。世界をひとつの大きなキャンバスと見て、独自の視点で形にし続ける。",
-    strengths: ["独創的な表現力", "深い感受性", "美への純粋な追求"],
-    catchphrase: "この感覚、まだ誰も形にしていない。",
+      "インスピレーションが来ると、他のことが全部後回しになる。「今じゃなくていい」はずのことでも、今じゃないと出てこない気がして手が動いてしまう。逆に、そのモードじゃない時は、同じことをしようとしてもまったく出てこない。\n\n「ムラがある」と言われることがある。でも本人には、ムラというより「乗れているか乗れていないか」の話で、ムラとは少し違う。でもうまく説明できないから、黙っていることが多い。\n\n作ったものを出す前に、急に不安になることがないですか。共鳴してくれる人がいるかどうか、出してみないとわからないのに、出す前から怖くなる、あの感じ。",
+    strengths: [
+      "誰も思いつかない切り口でものを見て、形にできる",
+      "感じたことを、人の心に届く表現に変換できる",
+      "「これは面白い」という直感の精度が、長期的に見ると高い",
+    ],
+    trap:
+      "エンジンがかかっている時と止まっている時の落差が大きい。周りからは「いる時といない時がある人」に見えることがある。でも本人は、止まりたくて止まっているわけじゃない。\n\n自分が込めたものを「よくわからなかった」と言われると、作品より自分を否定された感じがする。だから出すのが怖くなる。出さないと溜まる。この繰り返しにはまると、かなり消耗する。",
+    howToWin:
+      "あなたが動ける条件は三つ。環境、気分、「受け取ってくれる誰か」の存在。このうちコントロールできるのは環境だけなので、まずそこから整える。場所、時間帯、入り方の小さな儀式。それだけで出力が変わる。\n\n「完成させてから出す」より「出しながら完成させる」の方があなたには合っている。完璧にしてから出そうとするほど出せなくなる。万人受けを狙うより、一人に深く刺さる方を目指すこと。そっちの方が、あなたの力が出る。",
+    driver: [
+      "作っている最中の、時間が消えていく感覚",
+      "「これ、すごくわかる」と言ってもらえた瞬間",
+      "まだ存在しなかったものが、自分の手で初めて形になること",
+    ],
+    messageNow: "「作りたい」と思った衝動は、説明できなくていい。それがあなたの、一番正直なサインです。",
     populationPercent: 5,
     hpDefault: 7,
     mpDefault: 10,
@@ -376,7 +409,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Strategist_挑戦",
     jobType: "Strategist",
-    jobNameJa: "戦略家",
+    jobNameJa: "設計者",
     auraType: "挑戦",
     title: "攻めの戦略家",
     description:
@@ -392,7 +425,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Strategist_安定",
     jobType: "Strategist",
-    jobNameJa: "戦略家",
+    jobNameJa: "設計者",
     auraType: "安定",
     title: "磐石の戦略家",
     description:
@@ -408,7 +441,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Strategist_創造",
     jobType: "Strategist",
-    jobNameJa: "戦略家",
+    jobNameJa: "設計者",
     auraType: "創造",
     title: "革新的戦略家",
     description:
@@ -424,7 +457,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Strategist_探究",
     jobType: "Strategist",
-    jobNameJa: "戦略家",
+    jobNameJa: "設計者",
     auraType: "探究",
     title: "知的戦略家",
     description:
@@ -440,7 +473,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Strategist_奉仕",
     jobType: "Strategist",
-    jobNameJa: "戦略家",
+    jobNameJa: "設計者",
     auraType: "奉仕",
     title: "仲間のための戦略家",
     description:
@@ -458,7 +491,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Healer_挑戦",
     jobType: "Healer",
-    jobNameJa: "癒し手",
+    jobNameJa: "奉仕者",
     auraType: "挑戦",
     title: "勇敢な癒し手",
     description:
@@ -474,7 +507,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Healer_安定",
     jobType: "Healer",
-    jobNameJa: "癒し手",
+    jobNameJa: "奉仕者",
     auraType: "安定",
     title: "静かな癒し手",
     description:
@@ -490,7 +523,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Healer_創造",
     jobType: "Healer",
-    jobNameJa: "癒し手",
+    jobNameJa: "奉仕者",
     auraType: "創造",
     title: "芸術的癒し手",
     description:
@@ -506,7 +539,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Healer_探究",
     jobType: "Healer",
-    jobNameJa: "癒し手",
+    jobNameJa: "奉仕者",
     auraType: "探究",
     title: "深い癒し手",
     description:
@@ -522,13 +555,27 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Healer_奉仕",
     jobType: "Healer",
-    jobNameJa: "癒し手",
+    jobNameJa: "奉仕者",
     auraType: "奉仕",
     title: "純粋な癒し手",
+    catchphrase: "気が利く、と言われるけど、気にせずにはいられないだけだ。",
     description:
-      "ただ純粋に、誰かの力になりたい。その思いだけで動く。見返りを求めず、ひたすら与え続ける。",
-    strengths: ["純粋な利他心", "疲れを知らないサポート力", "人を信頼する力"],
-    catchphrase: "あなたが元気になることが、私の喜び。",
+      "誰かが無理をしているのに、本人がそれに気づいていない、という場面に気づくことがある。「大丈夫？」と聞くタイミングを測りながら、でもそっと近くにいる、という動きをしていることがないですか。\n\n周りからは「話しやすい」「気が利く」と言われる。でも本人からすると、特に何かをしているわけじゃなくて、ただ気になるから動いているだけ、という感覚の方が近かったりする。\n\n相手のペースを乱さずにいられる。それが力だとわかっているけど、気づくと自分のペースや気持ちが後回しになっている。",
+    strengths: [
+      "言葉にならない気持ちを、言葉の前に受け取れる",
+      "場の空気を柔らかくして、人が話しやすい雰囲気を作れる",
+      "相手のペースに合わせて、長く寄り添い続けられる",
+    ],
+    trap:
+      "引き受けすぎて、いつの間にか自分が空になっている。自分のことを聞かれると「大丈夫」と答えてしまう。本当は大丈夫じゃなくても。\n\nもうひとつ。言いたいことを飲み込みやすい。相手を傷つけないように、場の空気を壊さないように、と気にしているうちに、「自分がどう思っているか」が後回しになりすぎることがある。それが続くと、いつの間にかどこかに溜まっている。",
+    howToWin:
+      "あなたが全力で動けるのは、自分が満ちている時です。消耗している状態での「助けたい」は、消耗をさらに加速させる。だから、自分の状態に早めに気づくことが、あなたにとって一番重要なスキルになる。\n\n「NO」を練習するというより、まず「これは引き受けられる」「これは今は難しい」を自分の中で確認する習慣を持つこと。全部断れなくていい。自分のキャパを把握している人、というのがあなたの次のステージです。",
+    driver: [
+      "誰かの顔が、ほんの少し軽くなる瞬間",
+      "「あなたに話してよかった」という言葉",
+      "自分がいることで、場が少し呼吸できるようになる感覚",
+    ],
+    messageNow: "あなたが自分を後回しにするのは、やさしさからだとわかっている。でも、あなた自身も誰かに後回しにされない人でいてほしい。",
     populationPercent: 4,
     hpDefault: 7,
     mpDefault: 7,
@@ -540,7 +587,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Connector_挑戦",
     jobType: "Connector",
-    jobNameJa: "つなぎ手",
+    jobNameJa: "つなぐ人",
     auraType: "挑戦",
     title: "開拓するつなぎ手",
     description:
@@ -556,7 +603,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Connector_安定",
     jobType: "Connector",
-    jobNameJa: "つなぎ手",
+    jobNameJa: "つなぐ人",
     auraType: "安定",
     title: "信頼のつなぎ手",
     description:
@@ -572,7 +619,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Connector_創造",
     jobType: "Connector",
-    jobNameJa: "つなぎ手",
+    jobNameJa: "つなぐ人",
     auraType: "創造",
     title: "創造的つなぎ手",
     description:
@@ -588,7 +635,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Connector_探究",
     jobType: "Connector",
-    jobNameJa: "つなぎ手",
+    jobNameJa: "つなぐ人",
     auraType: "探究",
     title: "知のつなぎ手",
     description:
@@ -604,7 +651,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Connector_奉仕",
     jobType: "Connector",
-    jobNameJa: "つなぎ手",
+    jobNameJa: "つなぐ人",
     auraType: "奉仕",
     title: "縁の守り人",
     description:
@@ -673,10 +720,24 @@ export const AZ_TYPES: AZTypeData[] = [
     jobNameJa: "探究者",
     auraType: "探究",
     title: "純粋な探究者",
+    catchphrase: "「なんとなくそういうもの」が、一番落ち着かない。",
     description:
-      "知ることそのものが喜び。答えにたどり着くより、問いを深めることに充実感を覚える。",
-    strengths: ["無限の好奇心", "本質への洞察力", "知識の深化力"],
-    catchphrase: "なぜ、なぜ、なぜ。問い続けることが生きること。",
+      "「で、結局なぜそうなってるの？」が止まらない。表面の説明で納得したフリをしても、どこかで「本当は？」と問い続けている感覚、ないですか。\n\n会話が「まあそういうもんだよね」で終わると、ざらつく感じがある。議論したいわけじゃないし、空気を壊したいわけでもない。ただ、もう一層だけ掘り下げたい。\n\n周りからは「物知り」「冷静」と言われることがある。でも本人からすると、知識が増えるのは楽しいというより「やっとわかった」に近い安堵で、知らない状態がなんとなく落ち着かないから動いている、という感覚の方が近かったりする。",
+    strengths: [
+      "複雑な情報の中から、本質だけを見抜ける",
+      "感情ではなく構造で物事を考えられる",
+      "他の人が見落としているパターンや矛盾に気づける",
+    ],
+    trap:
+      "「もう少し調べてから」がずっと続く。完璧に理解してから動こうとするが、完璧な理解は来ないまま、気づくとタイミングが過ぎていることがある。\n\nもうひとつ。自分の中では整理がついているのに、話そうとすると時間がかかる。前提から説明しようとするから。「結論から言って」と言われるのが苦手で、でも省略すると正確じゃなくなる気がして、途中から黙ってしまうことがある。",
+    howToWin:
+      "あなたが動けるのは「全部わかった時」じゃなく、「仮説が立った時」です。完全な答えを待つより、「たぶんこうだ」という状態で動く練習をすると、あなたの力が外に出始める。\n\n考えたことを誰かに話す習慣を持つこと。あなたにとって「話す」は「伝える」より「整理する」行為になる。アウトプットが思考をさらに深くする感覚がわかると、一人で抱え込む量が減る。",
+    driver: [
+      "ずっと疑問だったことが、ある瞬間にカチッとつながる感覚",
+      "「誰も気づいていないけど、これが本当のことだ」という発見",
+      "自分が掘り下げたものが、誰かの問いにぴったり合う瞬間",
+    ],
+    messageNow: "あなたが「まだわからない」と言うとき、それは弱さじゃない。そこまで深く見ているから、「わからない」が見えている。",
     populationPercent: 2,
     hpDefault: 6,
     mpDefault: 10,
@@ -704,7 +765,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Storyteller_挑戦",
     jobType: "Storyteller",
-    jobNameJa: "語り手",
+    jobNameJa: "語り部",
     auraType: "挑戦",
     title: "炎の語り手",
     description:
@@ -720,7 +781,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Storyteller_安定",
     jobType: "Storyteller",
-    jobNameJa: "語り手",
+    jobNameJa: "語り部",
     auraType: "安定",
     title: "語り継ぐ人",
     description:
@@ -736,7 +797,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Storyteller_創造",
     jobType: "Storyteller",
-    jobNameJa: "語り手",
+    jobNameJa: "語り部",
     auraType: "創造",
     title: "純粋な語り手",
     description:
@@ -752,7 +813,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Storyteller_探究",
     jobType: "Storyteller",
-    jobNameJa: "語り手",
+    jobNameJa: "語り部",
     auraType: "探究",
     title: "知を語る人",
     description:
@@ -768,7 +829,7 @@ export const AZ_TYPES: AZTypeData[] = [
   {
     typeKey: "Storyteller_奉仕",
     jobType: "Storyteller",
-    jobNameJa: "語り手",
+    jobNameJa: "語り部",
     auraType: "奉仕",
     title: "声なき人の代弁者",
     description:

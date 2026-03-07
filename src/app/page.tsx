@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { SeekerPixelArt } from "@/components/pixel-art/SeekerPixelArt";
 
 /**
  * ランディングページ
@@ -54,9 +55,9 @@ export default async function RootPage() {
       {/* ─── メインコンテンツ ─── */}
       <main className="flex-1 flex flex-col items-center justify-center px-5 pb-12">
 
-        {/* シーカーのビット絵（シンプルな表現） */}
+        {/* メインキャラクター（上を見上げる人・星）*/}
         <div className="mb-8 animate-fade-in">
-          <SeekerPixelArt />
+          <SeekerPixelArt scale={1.5} />
         </div>
 
         {/* キャッチコピー */}
@@ -123,69 +124,3 @@ export default async function RootPage() {
   );
 }
 
-/**
- * シーカーのビット絵コンポーネント
- * SVGで描いたシンプルなピクセルキャラクター
- * 後からカラーバリエーションを追加できる構造
- */
-function SeekerPixelArt() {
-  // ピクセルサイズ（1ピクセル = 8px）
-  const px = 8;
-
-  // キャラクターのピクセルマップ
-  // 0=透明, 1=髪(紫), 2=肌, 3=目(白), 4=目(黒), 5=服(薄紫), 6=服(濃紫)
-  const pixels = [
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 2, 2, 2, 2, 2, 2, 0],
-    [0, 2, 3, 4, 4, 3, 2, 0],
-    [0, 2, 2, 2, 2, 2, 2, 0],
-    [0, 0, 2, 2, 2, 2, 0, 0],
-    [0, 5, 5, 6, 6, 5, 5, 0],
-    [5, 5, 5, 6, 6, 5, 5, 5],
-    [5, 5, 0, 5, 5, 0, 5, 5],
-    [0, 5, 0, 0, 0, 0, 5, 0],
-  ];
-
-  const colorMap: Record<number, string> = {
-    1: "#9060E0",  // 髪（紫）
-    2: "#FDDBB0",  // 肌
-    3: "#FFFFFF",  // 目の白
-    4: "#3A3A5C",  // 目の黒
-    5: "#B89EF0",  // 服（薄紫）
-    6: "#7C5CDB",  // 服（濃紫）
-  };
-
-  return (
-    <div
-      style={{
-        display: "inline-block",
-        imageRendering: "pixelated",
-        filter: "drop-shadow(0 4px 12px rgba(124, 92, 219, 0.25))",
-      }}
-    >
-      <svg
-        width={px * 8}
-        height={px * 10}
-        viewBox={`0 0 ${px * 8} ${px * 10}`}
-        style={{ imageRendering: "pixelated" }}
-      >
-        {pixels.map((row, y) =>
-          row.map((cell, x) => {
-            if (cell === 0) return null;
-            return (
-              <rect
-                key={`${x}-${y}`}
-                x={x * px}
-                y={y * px}
-                width={px}
-                height={px}
-                fill={colorMap[cell]}
-              />
-            );
-          })
-        )}
-      </svg>
-    </div>
-  );
-}

@@ -145,6 +145,7 @@ export default function DiagnosisPage() {
         {/* フォーマット別UI */}
         {currentQuestion.type === "bipolar" && (
           <BipolarSelector
+            key={currentQuestion.id}
             question={currentQuestion}
             selected={selectedAnswer as number | null}
             onSelect={handleAnswer}
@@ -154,6 +155,7 @@ export default function DiagnosisPage() {
 
         {currentQuestion.type === "scenario" && (
           <ScenarioSelector
+            key={currentQuestion.id}
             question={currentQuestion}
             selected={selectedAnswer as string | null}
             onSelect={handleAnswer}
@@ -163,6 +165,7 @@ export default function DiagnosisPage() {
 
         {currentQuestion.type === "agreement" && (
           <AgreementSelector
+            key={currentQuestion.id}
             question={currentQuestion}
             selected={selectedAnswer as number | null}
             onSelect={handleAnswer}
