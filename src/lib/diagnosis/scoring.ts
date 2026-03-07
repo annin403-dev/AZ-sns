@@ -1,25 +1,25 @@
 /**
- * AZタイプ診断 - スコアリングロジック
+ * AZタイプ診断 - スコアリングロジック（スライダー式）
  *
- * 入力：12問の回答（各問でa/b/c/dのどれかを選択）
- * 出力：職業タイプ（8種） × オーラ（5種）の組み合わせ = 40タイプのうち1つ
+ * 入力：15問 × 5段階スペクトラム回答（1=左極, 5=右極, 3=中立）
+ * 出力：職業タイプ（8種）× オーラ（5種）= 40タイプのうち1つ
  *
  * 計算方法：
- *   1. 各回答の jobType・auraType をカウント
- *   2. 最多のものが結果になる
- *   3. 同点の場合は後述の優先順位で決定
+ *   ポジション 1 → 左極 +2
+ *   ポジション 2 → 左極 +1
+ *   ポジション 3 → 両極 +1（中立）
+ *   ポジション 4 → 右極 +1
+ *   ポジション 5 → 右極 +2
+ *
+ *   最終スコアは最大スコアで正規化して比較（タイプごとの登場数の偏りを補正）
  */
 
-import {
-  DIAGNOSIS_QUESTIONS,
-  type JobType,
-  type AuraType,
-} from "./questions";
+import { SLIDER_QUESTIONS, type JobType, type AuraType } from "./questions";
 
 // ─── 型定義 ──────────────────────────────────────────────────
 
-/** 診断の回答（質問ID → 選択肢ID） */
-export type DiagnosisAnswers = Record<number, string>;
+/** スライダー回答（質問ID → ポジション 1〜5） */
+export type SliderAnswers = Record<number, number>;
 
 /** 診断スコア集計 */
 export interface DiagnosisScore {
@@ -31,21 +31,15 @@ export interface DiagnosisScore {
 export interface DiagnosisResult {
   jobType: JobType;
   auraType: AuraType;
-  /** 職業タイプの得点（確信度として使用） */
   jobScore: number;
-  /** オーラの得点（確信度として使用） */
   auraScore: number;
-  /** 全回答数（=12） */
   totalAnswers: number;
-  /** 職業タイプ別スコア（参考表示用） */
   allJobScores: Record<JobType, number>;
-  /** オーラ別スコア（参考表示用） */
   allAuraScores: Record<AuraType, number>;
 }
 
-// ─── 同点時の優先順位（タイプのデフォルト） ───────────────────
+// ─── 同点時の優先順位 ─────────────────────────────────────────
 
-/** 職業タイプの優先順位（同点時の決め手） */
 const JOB_TYPE_PRIORITY: JobType[] = [
   "Pioneer",
   "Creator",
@@ -57,7 +51,6 @@ const JOB_TYPE_PRIORITY: JobType[] = [
   "Scholar",
 ];
 
-/** オーラの優先順位（同点時の決め手） */
 const AURA_TYPE_PRIORITY: AuraType[] = [
   "創造",
   "挑戦",
@@ -66,11 +59,8 @@ const AURA_TYPE_PRIORITY: AuraType[] = [
   "安定",
 ];
 
-// ─── スコア計算 ───────────────────────────────────────────────
+// ─── スコア初期化 ─────────────────────────────────────────────
 
-/**
- * 初期スコアオブジェクトを作成（全タイプを0で初期化）
- */
 function initScores(): DiagnosisScore {
   return {
     jobScores: {
@@ -93,55 +83,83 @@ function initScores(): DiagnosisScore {
   };
 }
 
+// ─── 最大スコア計算（正規化用） ──────────────────────────────
+
+function calculateMaxScores(): DiagnosisScore {
+  const max = initScores();
+  for (const q of SLIDER_QUESTIONS) {
+    max.jobScores[q.leftPole.jobType] += 2;
+    max.auraScores[q.leftPole.auraType] += 2;
+    max.jobScores[q.rightPole.jobType] += 2;
+    max.auraScores[q.rightPole.auraType] += 2;
+  }
+  return max;
+}
+
+// ─── スライダースコア計算 ─────────────────────────────────────
+
 /**
- * 回答からスコアを計算する
+ * スライダー回答からスコアを計算する
+ *
+ * pos 1 → 左極 +2
+ * pos 2 → 左極 +1
+ * pos 3 → 両極 +1（中立）
+ * pos 4 → 右極 +1
+ * pos 5 → 右極 +2
  */
-export function calculateScores(answers: DiagnosisAnswers): DiagnosisScore {
+export function calculateSliderScores(answers: SliderAnswers): DiagnosisScore {
   const scores = initScores();
 
-  for (const question of DIAGNOSIS_QUESTIONS) {
-    const selectedOptionId = answers[question.id];
-    if (!selectedOptionId) continue; // 未回答はスキップ
+  for (const question of SLIDER_QUESTIONS) {
+    const pos = answers[question.id];
+    if (!pos) continue;
 
-    const selectedOption = question.options.find(
-      (opt) => opt.id === selectedOptionId
-    );
-    if (!selectedOption) continue;
+    let leftW = 0;
+    let rightW = 0;
+    if (pos === 1) { leftW = 2; rightW = 0; }
+    else if (pos === 2) { leftW = 1; rightW = 0; }
+    else if (pos === 3) { leftW = 1; rightW = 1; }
+    else if (pos === 4) { leftW = 0; rightW = 1; }
+    else if (pos === 5) { leftW = 0; rightW = 2; }
 
-    // 職業タイプとオーラのスコアを加算
-    scores.jobScores[selectedOption.jobType] += 1;
-    scores.auraScores[selectedOption.auraType] += 1;
+    scores.jobScores[question.leftPole.jobType] += leftW;
+    scores.auraScores[question.leftPole.auraType] += leftW;
+    scores.jobScores[question.rightPole.jobType] += rightW;
+    scores.auraScores[question.rightPole.auraType] += rightW;
   }
 
   return scores;
 }
 
-/**
- * スコアから最終的な診断結果を決定する
- *
- * 同点の場合：優先順位リストの上位を選ぶ
- */
-export function determineResult(scores: DiagnosisScore): DiagnosisResult {
-  // 職業タイプの最高スコアを見つける
-  let maxJobScore = 0;
+// ─── 結果決定（正規化スコアで比較） ──────────────────────────
+
+export function determineSliderResult(scores: DiagnosisScore): DiagnosisResult {
+  const maxScores = calculateMaxScores();
+
+  // 正規化スコアで最高の職業タイプを選ぶ
   let bestJobType: JobType = "Pioneer";
+  let bestJobNorm = -1;
 
   for (const jobType of JOB_TYPE_PRIORITY) {
-    const score = scores.jobScores[jobType];
-    if (score > maxJobScore) {
-      maxJobScore = score;
+    const max = maxScores.jobScores[jobType];
+    if (max === 0) continue;
+    const norm = scores.jobScores[jobType] / max;
+    if (norm > bestJobNorm) {
+      bestJobNorm = norm;
       bestJobType = jobType;
     }
   }
 
-  // オーラの最高スコアを見つける
-  let maxAuraScore = 0;
+  // 正規化スコアで最高のオーラタイプを選ぶ
   let bestAuraType: AuraType = "創造";
+  let bestAuraNorm = -1;
 
   for (const auraType of AURA_TYPE_PRIORITY) {
-    const score = scores.auraScores[auraType];
-    if (score > maxAuraScore) {
-      maxAuraScore = score;
+    const max = maxScores.auraScores[auraType];
+    if (max === 0) continue;
+    const norm = scores.auraScores[auraType] / max;
+    if (norm > bestAuraNorm) {
+      bestAuraNorm = norm;
       bestAuraType = auraType;
     }
   }
@@ -149,21 +167,18 @@ export function determineResult(scores: DiagnosisScore): DiagnosisResult {
   return {
     jobType: bestJobType,
     auraType: bestAuraType,
-    jobScore: maxJobScore,
-    auraScore: maxAuraScore,
-    totalAnswers: Object.keys(scores.jobScores).reduce(
-      (sum, key) => sum + scores.jobScores[key as JobType],
-      0
-    ),
+    jobScore: scores.jobScores[bestJobType],
+    auraScore: scores.auraScores[bestAuraType],
+    totalAnswers: Object.values(answers).filter(Boolean).length,
     allJobScores: scores.jobScores,
     allAuraScores: scores.auraScores,
   };
 }
 
 /**
- * 回答から診断結果を一括計算する（メイン関数）
+ * スライダー回答から診断結果を一括計算（メイン関数）
  */
-export function runDiagnosis(answers: DiagnosisAnswers): DiagnosisResult {
-  const scores = calculateScores(answers);
-  return determineResult(scores);
+export function runSliderDiagnosis(answers: SliderAnswers): DiagnosisResult {
+  const scores = calculateSliderScores(answers);
+  return determineSliderResult(scores);
 }

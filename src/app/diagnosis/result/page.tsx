@@ -15,12 +15,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { runDiagnosis } from "@/lib/diagnosis/scoring";
+import { runSliderDiagnosis } from "@/lib/diagnosis/scoring";
 import { getAZType, JOB_TYPE_INFO, AURA_INFO } from "@/lib/diagnosis/types-data";
 import type { DiagnosisResult } from "@/lib/diagnosis/scoring";
 import type { AZTypeData } from "@/lib/diagnosis/types-data";
 
-const STORAGE_KEY = "az_diagnosis_answers";
+const STORAGE_KEY = "az_slider_answers";
 
 // ─── コンポーネント ──────────────────────────────────────────
 
@@ -40,7 +40,7 @@ export default function DiagnosisResultPage() {
     }
 
     const answers = JSON.parse(stored);
-    const diagResult = runDiagnosis(answers);
+    const diagResult = runSliderDiagnosis(answers);
     const azType = getAZType(diagResult.jobType, diagResult.auraType);
 
     setResult(diagResult);

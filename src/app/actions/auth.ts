@@ -42,18 +42,22 @@ export async function register(formData: FormData) {
   });
 
   if (error) {
-    if (error.message.includes("already registered"))
+    const msg = (error.message ?? "").toLowerCase();
+    if (msg.includes("already registered") || msg.includes("already in use") || msg.includes("already exists")) {
       return { error: "このメールアドレスはすでに登録されています" };
-    return { error: "登録に失敗しました。もう一度お試しください" };
+    }
+    if (msg.includes("rate limit") || msg.includes("sending") || msg.includes("smtp") || msg.includes("email")) {
+      return { error: "メール送信に問題があります。しばらく待ってから再試行してください（詳細: " + error.message + "）" };
+    }
+    // 実際のエラー内容を表示して原因特定を助ける
+    return { error: "登録エラー: " + error.message };
   }
 
-  // 診断結果をprofilesに保存（トリガー待ち500ms）
-  if (authData.user && jobType && auraType) {
+  // NOTE: profiles テーブルに job_type / aura_type カラムがないため
+  // 診断タイプ情報はローカルストレージ（az_slider_answers）に保持する。
+  // onboarding で soul_types テーブルに保存される。
+  if (authData.user) {
     await new Promise((r) => setTimeout(r, 500));
-    await supabase
-      .from("profiles")
-      .update({ job_type: jobType, aura_type: auraType })
-      .eq("id", authData.user.id);
   }
 
   revalidatePath("/", "layout");

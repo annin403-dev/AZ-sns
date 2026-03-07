@@ -76,7 +76,7 @@ export default async function RootPage() {
           className="text-center text-base leading-relaxed mb-10 animate-slide-up"
           style={{ color: "#7B78A0", maxWidth: "280px" }}
         >
-          12問に答えるだけで、あなたの「職業タイプ」と「オーラ」がわかります
+          15の質問に直感で答えるだけで、あなたの「職業タイプ」と「オーラ」がわかります
         </p>
 
         {/* CTAボタン */}
@@ -92,7 +92,7 @@ export default async function RootPage() {
         {/* 特徴ポイント */}
         <div className="mt-10 w-full max-w-xs space-y-3 animate-fade-in">
           {[
-            { icon: "⏱", text: "約2分でできる" },
+            { icon: "⏱", text: "約3分でできる" },
             { icon: "🔮", text: "40タイプから診断" },
             { icon: "📖", text: "自分の取扱説明書が作れる" },
           ].map((item) => (
