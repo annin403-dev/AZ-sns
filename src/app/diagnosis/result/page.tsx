@@ -180,7 +180,7 @@ export default function DiagnosisResultPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">{auraInfo.emoji}</span>
             <h2 className="text-sm font-semibold" style={{ color: "#7B78A0" }}>
-              あなたのオーラ：{result.auraType}
+              あなたの心のエンジン：{result.auraType}
             </h2>
           </div>
           <p className="text-sm leading-relaxed" style={{ color: "#1C1A2E" }}>

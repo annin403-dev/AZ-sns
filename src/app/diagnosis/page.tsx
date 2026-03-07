@@ -29,11 +29,25 @@ export default function DiagnosisPage() {
   const totalQuestions = SLIDER_QUESTIONS.length;
   const progress = (currentIndex / totalQuestions) * 100;
 
-  // ── 毎回まっさらな状態で開始 ──────────────────────────────
+  // ── 毎回まっさらな状態で開始（bfcache対策込み） ───────────
   useEffect(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("az_diagnosis_answers"); // 旧キーもクリア
-  }, []);
+    const reset = () => {
+      setCurrentIndex(0);
+      setAnswers({});
+      setSelectedPos(null);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("az_diagnosis_answers");
+    };
+
+    reset();
+
+    // iPhoneの「戻る」でキャッシュから復元されたときも強制リセット
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) reset();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── ポジション選択 ─────────────────────────────────────────
 
