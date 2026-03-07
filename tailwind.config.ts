@@ -9,19 +9,42 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ダークベース＋光のアクセント
         az: {
-          bg: "#0a0a0f",          // 最深部の背景
-          surface: "#12121a",     // カード・コンテナ背景
-          border: "#1e1e2e",      // ボーダー
-          muted: "#2a2a3d",       // ミュート背景
-          text: "#e8e8f0",        // メインテキスト
-          subtle: "#8888a8",      // サブテキスト
-          gold: "#f0c060",        // 達成・報酬の金色
-          glow: "#6060f0",        // 光のアクセント（紫青）
-          aurora: "#40c0a0",      // 成長の緑
-          flame: "#f06040",       // 情熱の赤橙
-          mystic: "#c060f0",      // 神秘の紫
+          // ─── ベースカラー（明るい・やわらかい） ───
+          bg: "#FAF9FF",        // ページ背景（薄いラベンダーホワイト）
+          surface: "#FFFFFF",   // カード・コンテナ（白）
+          surface2: "#F3F1FC",  // 少し沈んだカード（ホーム内セクション等）
+          border: "#E8E4F8",    // ボーダー（薄い紫がかったグレー）
+          muted: "#EDE9F9",     // ミュート背景（タグ・バッジ等）
+
+          // ─── テキスト ───
+          text: "#1C1A2E",      // メインテキスト（濃い紺）
+          subtle: "#7B78A0",    // サブテキスト（ミュート紫グレー）
+
+          // ─── ブランドカラー ───
+          primary: "#7C5CDB",   // メインアクセント（バイオレット）
+          "primary-light": "#EDE9F9", // プライマリの薄い版（背景等）
+
+          // ─── ゲーム要素 ───
+          gold: "#F5A623",      // Luck Lv・達成（アンバーゴールド）
+          "gold-light": "#FEF5E4", // ゴールドの薄い版
+
+          // ─── オーラ5色（タイプ別アクセント） ───
+          // 挑戦：情熱の赤系
+          aura1: "#F05252",
+          "aura1-light": "#FEE8E8",
+          // 安定：落ち着きのティール
+          aura2: "#38B2AC",
+          "aura2-light": "#E6F7F6",
+          // 創造：想像の紫
+          aura3: "#9060E0",
+          "aura3-light": "#F0EAFC",
+          // 探究：知性の青
+          aura4: "#4090E0",
+          "aura4-light": "#E8F2FD",
+          // 奉仕：やさしい緑
+          aura5: "#38C074",
+          "aura5-light": "#E8F9EF",
         },
       },
       fontFamily: {
@@ -33,35 +56,43 @@ const config: Config = {
           "sans-serif",
         ],
       },
+      borderRadius: {
+        // 角丸大きめがコンセプト
+        "2xl": "1rem",
+        "3xl": "1.5rem",
+        "4xl": "2rem",
+      },
+      boxShadow: {
+        // やわらかい影（明るいテーマ向け）
+        card: "0 2px 12px rgba(124, 92, 219, 0.08)",
+        "card-hover": "0 4px 20px rgba(124, 92, 219, 0.14)",
+        gold: "0 2px 12px rgba(245, 166, 35, 0.20)",
+        aura: "0 2px 12px rgba(124, 92, 219, 0.20)",
+      },
       animation: {
-        "glow-pulse": "glowPulse 2s ease-in-out infinite",
-        "float": "float 3s ease-in-out infinite",
-        "particle": "particle 1.5s ease-out forwards",
-        "shine": "shine 0.5s ease-out forwards",
+        "fade-in": "fadeIn 0.3s ease-out",
+        "slide-up": "slideUp 0.4s ease-out",
+        "bounce-soft": "bounceSoft 0.5s ease-out",
+        "pulse-gold": "pulseGold 2s ease-in-out infinite",
       },
       keyframes: {
-        glowPulse: {
-          "0%, 100%": { boxShadow: "0 0 10px rgba(96, 96, 240, 0.3)" },
-          "50%": { boxShadow: "0 0 30px rgba(96, 96, 240, 0.8)" },
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
         },
-        float: {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-8px)" },
+        slideUp: {
+          "0%": { transform: "translateY(16px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
         },
-        particle: {
-          "0%": { transform: "scale(0) translateY(0)", opacity: "1" },
-          "100%": { transform: "scale(1) translateY(-100px)", opacity: "0" },
+        bounceSoft: {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "60%": { transform: "scale(1.03)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
         },
-        shine: {
-          "0%": { opacity: "0", transform: "scale(0.8)" },
-          "50%": { opacity: "1", transform: "scale(1.1)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
+        pulseGold: {
+          "0%, 100%": { boxShadow: "0 0 0px rgba(245, 166, 35, 0)" },
+          "50%": { boxShadow: "0 0 16px rgba(245, 166, 35, 0.4)" },
         },
-      },
-      backgroundImage: {
-        "gradient-mystic": "linear-gradient(135deg, #0a0a0f 0%, #12082a 50%, #0a0a0f 100%)",
-        "gradient-aurora": "linear-gradient(135deg, #082a1a 0%, #0a1a2a 100%)",
-        "gradient-gold": "linear-gradient(135deg, #f0c060 0%, #f08020 100%)",
       },
     },
   },
