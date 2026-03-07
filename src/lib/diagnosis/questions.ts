@@ -182,34 +182,41 @@ export const MIXED_QUESTIONS: DiagnosisQuestion[] = [
   },
 
   // ── Part 3: 共感度スライダー（Q12〜Q16） ──────────────────────
+  // 設計方針：1タイプだけが反応する問いにせず、
+  //           複数タイプがそれぞれの理由で共感できる文を混ぜる
 
   {
     id: 12, part: 3, type: "agreement",
-    statement: "まだ誰も踏み込んでいない場所に、最初に立ちたい",
+    // Pioneer が強く反応するが、Scholar・Creator も「まだ誰も気づいていない」文脈で共感できる
+    statement: "まだ誰も気にしていないことに、いち早く気づいて動きたい",
     targetJobType:  "Pioneer",
     targetAuraType: "挑戦",
   },
   {
     id: 13, part: 3, type: "agreement",
-    statement: "誰かの心が、少し軽くなる瞬間が、一番うれしい",
+    // Healer が一番共感するが、Connector・Storyteller も「場の変化を感じる」で共感できる
+    statement: "自分がそこにいることで、場が少し柔らかくなる感じが好きだ",
     targetJobType:  "Healer",
     targetAuraType: "奉仕",
   },
   {
     id: 14, part: 3, type: "agreement",
-    statement: "自分の言葉や表現で、誰かの感情を動かしたい",
+    // Storyteller メインだが、Creator・Connector も「感じたことを伝えたい」で共感できる
+    statement: "自分の感じたことや見えた景色を、誰かと共有せずにはいられない",
     targetJobType:  "Storyteller",
     targetAuraType: "創造",
   },
   {
     id: 15, part: 3, type: "agreement",
-    statement: "全体を俯瞰して、最善の一手を見つけるのが心地いい",
+    // Strategist メインだが、Architect・Scholar も「整理されてスッキリ」で共感できる
+    statement: "複雑に見えることが整理されて、スッキリ見えてくると気持ちいい",
     targetJobType:  "Strategist",
     targetAuraType: "安定",
   },
   {
     id: 16, part: 3, type: "agreement",
-    statement: "わからないことがあると、徹底的に解明したくなる",
+    // Scholar メインだが、Strategist・Pioneer も「表面でなく本質を知りたい」で共感できる
+    statement: "表面的な答えより、その裏にある本当の理由を知りたくなる",
     targetJobType:  "Scholar",
     targetAuraType: "探究",
   },
