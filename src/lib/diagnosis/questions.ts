@@ -1,15 +1,14 @@
 /**
- * AZタイプ診断 - 質問データ（スライダー式）
+ * AZタイプ診断 - 質問データ（3フォーマット混合・16問）
  *
- * 15問 × 5段階スペクトラム
- * 各問は「左極」と「右極」の2タイプ軸を持つバイポーラ設計
+ * Part 1（Q1〜Q6）   バイポーラスライダー：動き方・思考スタイルを連続軸で測る
+ * Part 2（Q7〜Q11）  シナリオ4択：具体的な場面で自分に近い行動を選ぶ
+ * Part 3（Q12〜Q16） 共感度スライダー：1文への当てはまり度を5段階で答える
  *
- * 職業タイプ（8種）：
- *   Pioneer / Architect / Creator / Strategist /
- *   Healer / Connector / Scholar / Storyteller
- *
- * オーラ（5種）：
- *   挑戦 / 安定 / 創造 / 探究 / 奉仕
+ * 設計原則
+ *   - Part1 の左右軸に「良い/悪い」を作らない（どちらも等価な個性）
+ *   - Part2 の4択はどれもそれなりに自分っぽく見える選択肢にする
+ *   - Part3 の文章は具体的かつ人によって刺さり方が分かれる表現にする
  */
 
 export type JobType =
@@ -24,143 +23,202 @@ export type JobType =
 
 export type AuraType = "挑戦" | "安定" | "創造" | "探究" | "奉仕";
 
-export interface SliderPole {
+// ─── Part 1: バイポーラスライダー ────────────────────────────
+
+export interface BipolarQuestion {
+  id: number;
+  part: 1;
+  type: "bipolar";
+  text: string;
+  leftLabel: string;   // 左極の短いラベル
+  rightLabel: string;  // 右極の短いラベル
+  leftPole: { jobType: JobType; auraType: AuraType };
+  rightPole: { jobType: JobType; auraType: AuraType };
+}
+
+// ─── Part 2: シナリオ4択 ─────────────────────────────────────
+
+export interface ScenarioOption {
+  id: "a" | "b" | "c" | "d";
+  text: string;
   jobType: JobType;
   auraType: AuraType;
 }
 
-export interface SliderQuestion {
+export interface ScenarioQuestion {
   id: number;
-  text: string;        // 質問文
-  leftLabel: string;   // 左端のラベル（2〜6文字）
-  rightLabel: string;  // 右端のラベル（2〜6文字）
-  leftPole: SliderPole;
-  rightPole: SliderPole;
+  part: 2;
+  type: "scenario";
+  text: string;        // \n で改行可
+  options: ScenarioOption[];
 }
 
+// ─── Part 3: 共感度スライダー ─────────────────────────────────
+
+export interface AgreementQuestion {
+  id: number;
+  part: 3;
+  type: "agreement";
+  statement: string;   // 「〜」形式の短い文
+  targetJobType: JobType;
+  targetAuraType: AuraType;
+}
+
+// ─── ユニオン型 ───────────────────────────────────────────────
+
+export type DiagnosisQuestion =
+  | BipolarQuestion
+  | ScenarioQuestion
+  | AgreementQuestion;
+
 // ─────────────────────────────────────────────────────────────
-// 15問のスライダー質問
+// 16問の質問データ
 // ─────────────────────────────────────────────────────────────
 
-export const SLIDER_QUESTIONS: SliderQuestion[] = [
+export const MIXED_QUESTIONS: DiagnosisQuestion[] = [
+
+  // ── Part 1: バイポーラスライダー（Q1〜Q6） ──────────────────
+
   {
-    id: 1,
-    text: "前に進むとき、あなたは？",
-    leftLabel: "まず動く",
-    rightLabel: "準備してから",
-    leftPole: { jobType: "Pioneer", auraType: "挑戦" },
-    rightPole: { jobType: "Architect", auraType: "安定" },
+    id: 1, part: 1, type: "bipolar",
+    text: "動き出すとき、エネルギーが湧くのは？",
+    leftLabel: "未開の道を歩くとき",
+    rightLabel: "誰かの顔が変わるとき",
+    leftPole:  { jobType: "Pioneer",  auraType: "挑戦" },
+    rightPole: { jobType: "Healer",   auraType: "奉仕" },
   },
   {
-    id: 2,
-    text: "力を一番発揮できるのは？",
-    leftLabel: "何かを作るとき",
-    rightLabel: "深く知るとき",
-    leftPole: { jobType: "Creator", auraType: "創造" },
-    rightPole: { jobType: "Scholar", auraType: "探究" },
-  },
-  {
-    id: 3,
-    text: "困ったとき、まず？",
-    leftLabel: "誰かに話す",
-    rightLabel: "自分で分析",
-    leftPole: { jobType: "Connector", auraType: "奉仕" },
+    id: 2, part: 1, type: "bipolar",
+    text: "ものごとを進める感覚は？",
+    leftLabel: "感覚と直感で動く",
+    rightLabel: "情報を集めて論理で進む",
+    leftPole:  { jobType: "Creator",    auraType: "創造" },
     rightPole: { jobType: "Strategist", auraType: "安定" },
   },
   {
-    id: 4,
-    text: "心に火がつくのは？",
-    leftLabel: "新しい挑戦",
-    rightLabel: "人の役に立つ",
-    leftPole: { jobType: "Pioneer", auraType: "挑戦" },
-    rightPole: { jobType: "Healer", auraType: "奉仕" },
-  },
-  {
-    id: 5,
-    text: "人に伝えたいのは？",
-    leftLabel: "体験・物語",
-    rightLabel: "知識・仕組み",
-    leftPole: { jobType: "Storyteller", auraType: "創造" },
-    rightPole: { jobType: "Scholar", auraType: "探究" },
-  },
-  {
-    id: 6,
-    text: "学ぶとき、スタイルは？",
-    leftLabel: "試して感覚で",
-    rightLabel: "理論から体系的",
-    leftPole: { jobType: "Creator", auraType: "創造" },
+    id: 3, part: 1, type: "bipolar",
+    text: "新しいことを始めるとき",
+    leftLabel: "動きながら形にする",
+    rightLabel: "準備が整ってから進む",
+    leftPole:  { jobType: "Pioneer",   auraType: "挑戦" },
     rightPole: { jobType: "Architect", auraType: "安定" },
   },
   {
-    id: 7,
-    text: "「自分らしい」成果とは？",
-    leftLabel: "誰も行かない場所",
-    rightLabel: "誰かが楽になった",
-    leftPole: { jobType: "Pioneer", auraType: "挑戦" },
-    rightPole: { jobType: "Healer", auraType: "奉仕" },
+    id: 4, part: 1, type: "bipolar",
+    text: "考えが整理されるのは？",
+    leftLabel: "一人で深く考えるとき",
+    rightLabel: "誰かと話しているとき",
+    leftPole:  { jobType: "Scholar",    auraType: "探究" },
+    rightPole: { jobType: "Connector",  auraType: "奉仕" },
   },
   {
-    id: 8,
-    text: "チームでの自分は？",
-    leftLabel: "全体を設計",
-    rightLabel: "人をつなぐ",
-    leftPole: { jobType: "Architect", auraType: "安定" },
-    rightPole: { jobType: "Connector", auraType: "奉仕" },
+    id: 5, part: 1, type: "bipolar",
+    text: "人に届けたいのは？",
+    leftLabel: "体験や感情の物語",
+    rightLabel: "役立つ知識や仕組み",
+    leftPole:  { jobType: "Storyteller", auraType: "創造" },
+    rightPole: { jobType: "Architect",   auraType: "探究" },
   },
   {
-    id: 9,
-    text: "決断の最後の決め手は？",
-    leftLabel: "「これだ」の直感",
-    rightLabel: "比べて検証した結論",
-    leftPole: { jobType: "Creator", auraType: "創造" },
-    rightPole: { jobType: "Strategist", auraType: "安定" },
-  },
-  {
-    id: 10,
-    text: "深く心が動くのは？",
-    leftLabel: "誰かの物語",
-    rightLabel: "問いの答え",
-    leftPole: { jobType: "Storyteller", auraType: "創造" },
+    id: 6, part: 1, type: "bipolar",
+    text: "新しいことと向き合うとき",
+    leftLabel: "試しながら体でつかむ",
+    rightLabel: "なぜかを理解してから",
+    leftPole:  { jobType: "Creator", auraType: "創造" },
     rightPole: { jobType: "Scholar", auraType: "探究" },
   },
+
+  // ── Part 2: シナリオ4択（Q7〜Q11） ───────────────────────────
+
   {
-    id: 11,
-    text: "充実した一日は？",
-    leftLabel: "人と深く語った",
-    rightLabel: "一つを調べ尽くした",
-    leftPole: { jobType: "Connector", auraType: "奉仕" },
-    rightPole: { jobType: "Scholar", auraType: "探究" },
+    id: 7, part: 2, type: "scenario",
+    text: "チームプロジェクトがスタートした。\nあなたが自然になるのは？",
+    options: [
+      { id: "a", text: "方向を決めて、先頭を走る",        jobType: "Pioneer",     auraType: "挑戦" },
+      { id: "b", text: "全体を設計して整理する",          jobType: "Architect",   auraType: "安定" },
+      { id: "c", text: "人と人をつなぎ、場を作る",        jobType: "Connector",   auraType: "奉仕" },
+      { id: "d", text: "ビジョンを言葉にして伝える",      jobType: "Storyteller", auraType: "創造" },
+    ],
   },
   {
-    id: 12,
-    text: "グループの中でのあなたは？",
-    leftLabel: "先頭を走る",
-    rightLabel: "言葉でビジョンを語る",
-    leftPole: { jobType: "Pioneer", auraType: "挑戦" },
-    rightPole: { jobType: "Storyteller", auraType: "創造" },
+    id: 8, part: 2, type: "scenario",
+    text: "なにも予定のない休日。\n一番充実しそうな過ごし方は？",
+    options: [
+      { id: "a", text: "知らない場所や体験を探しに行く",            jobType: "Pioneer",   auraType: "探究" },
+      { id: "b", text: "ずっと気になっていたことを調べ尽くす",      jobType: "Scholar",   auraType: "探究" },
+      { id: "c", text: "何かを作ったり、表現することに没頭する",    jobType: "Creator",   auraType: "創造" },
+      { id: "d", text: "大切な人とゆっくり深く話し込む",            jobType: "Connector", auraType: "奉仕" },
+    ],
   },
   {
-    id: 13,
-    text: "判断のよりどころは？",
-    leftLabel: "感情・関係性",
-    rightLabel: "効率・合理性",
-    leftPole: { jobType: "Healer", auraType: "奉仕" },
-    rightPole: { jobType: "Strategist", auraType: "安定" },
+    id: 9, part: 2, type: "scenario",
+    text: "友人がうまくいかないことを話してくれた。\nあなたがとる行動は？",
+    options: [
+      { id: "a", text: "解決策をいくつか整理して提案する",        jobType: "Strategist", auraType: "挑戦" },
+      { id: "b", text: "なぜそうなったのか、一緒に掘り下げる",    jobType: "Scholar",    auraType: "探究" },
+      { id: "c", text: "ただひたすら話を聞いて、気持ちに寄り添う", jobType: "Healer",     auraType: "奉仕" },
+      { id: "d", text: "助けになりそうな人や情報をつなぐ",        jobType: "Connector",  auraType: "奉仕" },
+    ],
   },
   {
-    id: 14,
-    text: "理想の仕事環境は？",
-    leftLabel: "自由で余白がある",
-    rightLabel: "整理されて明確",
-    leftPole: { jobType: "Creator", auraType: "創造" },
-    rightPole: { jobType: "Architect", auraType: "安定" },
+    id: 10, part: 2, type: "scenario",
+    text: "何かを決めるとき、\n最後の決め手になるのは？",
+    options: [
+      { id: "a", text: "「やってみたい」という感覚",          jobType: "Pioneer",    auraType: "挑戦" },
+      { id: "b", text: "データや過去の実績から見た確度",      jobType: "Strategist", auraType: "安定" },
+      { id: "c", text: "「自分らしいか」という直感",          jobType: "Creator",    auraType: "創造" },
+      { id: "d", text: "「誰かの役に立つか」という軸",        jobType: "Healer",     auraType: "奉仕" },
+    ],
   },
   {
-    id: 15,
-    text: "人との関わり方は？",
-    leftLabel: "言葉で刺激する",
-    rightLabel: "そばで支え続ける",
-    leftPole: { jobType: "Storyteller", auraType: "創造" },
-    rightPole: { jobType: "Healer", auraType: "奉仕" },
+    id: 11, part: 2, type: "scenario",
+    text: "「ああ、うまくいった」と感じる瞬間。\nどれが一番近い？",
+    options: [
+      { id: "a", text: "自分の計画通りに、きれいに動いた",      jobType: "Architect",   auraType: "安定" },
+      { id: "b", text: "自分の言葉が、誰かの心に刺さった",      jobType: "Storyteller", auraType: "創造" },
+      { id: "c", text: "バラバラだったチームがひとつになった",  jobType: "Connector",   auraType: "奉仕" },
+      { id: "d", text: "誰かが抱えていた重さが、少し軽くなった", jobType: "Healer",      auraType: "奉仕" },
+    ],
+  },
+
+  // ── Part 3: 共感度スライダー（Q12〜Q16） ──────────────────────
+
+  {
+    id: 12, part: 3, type: "agreement",
+    statement: "まだ誰も踏み込んでいない場所に、最初に立ちたい",
+    targetJobType:  "Pioneer",
+    targetAuraType: "挑戦",
+  },
+  {
+    id: 13, part: 3, type: "agreement",
+    statement: "誰かの心が、少し軽くなる瞬間が、一番うれしい",
+    targetJobType:  "Healer",
+    targetAuraType: "奉仕",
+  },
+  {
+    id: 14, part: 3, type: "agreement",
+    statement: "自分の言葉や表現で、誰かの感情を動かしたい",
+    targetJobType:  "Storyteller",
+    targetAuraType: "創造",
+  },
+  {
+    id: 15, part: 3, type: "agreement",
+    statement: "全体を俯瞰して、最善の一手を見つけるのが心地いい",
+    targetJobType:  "Strategist",
+    targetAuraType: "安定",
+  },
+  {
+    id: 16, part: 3, type: "agreement",
+    statement: "わからないことがあると、徹底的に解明したくなる",
+    targetJobType:  "Scholar",
+    targetAuraType: "探究",
   },
 ];
+
+// ─── パート区切り情報 ─────────────────────────────────────────
+
+export const PART_INFO = {
+  1: { label: "あなたの動き方",       range: [1, 6]  as const },
+  2: { label: "あなたが大切にするもの", range: [7, 11] as const },
+  3: { label: "あなた自身への問い",    range: [12, 16] as const },
+} as const;

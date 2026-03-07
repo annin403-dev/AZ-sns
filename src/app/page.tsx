@@ -92,8 +92,8 @@ export default async function RootPage() {
         {/* 特徴ポイント */}
         <div className="mt-10 w-full max-w-xs space-y-3 animate-fade-in">
           {[
-            { icon: "⏱", text: "約3分でできる" },
-            { icon: "🔮", text: "40タイプから診断" },
+            { icon: "⏱", text: "約5分・16問の本格診断" },
+            { icon: "🔮", text: "40パターンから判定" },
             { icon: "📖", text: "自分の取扱説明書が作れる" },
           ].map((item) => (
             <div
