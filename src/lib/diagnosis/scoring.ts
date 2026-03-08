@@ -155,7 +155,7 @@ export function calculateMixedScores(answers: MixedAnswers): DiagnosisScore {
 
 // ─── 結果決定 ─────────────────────────────────────────────────
 
-export function determineMixedResult(scores: DiagnosisScore): DiagnosisResult {
+export function determineMixedResult(scores: DiagnosisScore, answers: MixedAnswers): DiagnosisResult {
   const maxScores = calculateMaxScores(MIXED_QUESTIONS);
 
   // 正規化スコア（0〜1）で最高タイプを選ぶ
@@ -192,6 +192,6 @@ export function determineMixedResult(scores: DiagnosisScore): DiagnosisResult {
 
 export function runMixedDiagnosis(answers: MixedAnswers): DiagnosisResult {
   const scores = calculateMixedScores(answers);
-  return determineMixedResult(scores);
+  return determineMixedResult(scores, answers);
 }
 
