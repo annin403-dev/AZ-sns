@@ -32,7 +32,7 @@ export default function LoginPage() {
           AZ
         </h1>
         <p className="text-sm" style={{ color: "#7B78A0" }}>
-          おかえり、シーカー
+          おかえり
         </p>
       </div>
 

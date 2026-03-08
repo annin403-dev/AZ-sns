@@ -41,7 +41,7 @@ export default async function MyPage() {
     .eq("user_id", user.id)
     .order("awarded_at", { ascending: false });
 
-  const displayName = profile?.display_name || "シーカー";
+  const displayName = profile?.display_name || "あなた";
   const jobType = profile?.job_type as JobType | null;
   const auraType = profile?.aura_type as AuraType | null;
   const luckLv = profile?.luck_lv || 1;

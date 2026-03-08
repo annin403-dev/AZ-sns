@@ -31,7 +31,7 @@ function RegisterForm() {
       <div className="mb-8 text-center">
         <h1 className="text-5xl font-bold mb-1" style={{ color: "#7C5CDB" }}>AZ</h1>
         <p className="text-sm" style={{ color: "#7B78A0" }}>
-          {diagType ? "診断完了！アカウントを作って続けよう" : "シーカーの旅をはじめよう"}
+          {diagType ? "診断完了！アカウントを作って続けよう" : "AZをはじめよう"}
         </p>
       </div>
 

@@ -69,7 +69,7 @@ export default async function HomePage() {
     .eq("user_id", user.id)
     .gte("scheduled_date", weekStart);
 
-  const displayName = profile?.display_name || "シーカー";
+  const displayName = profile?.display_name || "あなた";
   const luckLv = profile?.luck_lv || 1;
   const luckXp = profile?.luck_xp || 0;
   const hp = profile?.hp || 7;

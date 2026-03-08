@@ -31,20 +31,22 @@ export default function DiagnosisPage() {
 
   // ── 毎回まっさらな状態で開始（bfcache対策込み） ───────────
   useEffect(() => {
-    // 初回マウント時にリセット
-    setCurrentIndex(0);
-    setAnswers({});
-    setSelectedAnswer(null);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("az_slider_answers");
-    localStorage.removeItem("az_diagnosis_answers");
+    const doReset = () => {
+      setCurrentIndex(0);
+      setAnswers({});
+      setSelectedAnswer(null);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("az_slider_answers");
+      localStorage.removeItem("az_diagnosis_answers");
+    };
 
-    // bfcache（Safari戻るボタン等）で復元された場合は強制リロード
-    // → React stateが旧状態で復元されフラッシュが起きるため
+    // 初回マウント時にリセット
+    doReset();
+
+    // bfcache（Safari「戻る」）で復元された場合もstateをリセット
+    // ※ window.location.reload() は使わない（途中問題への in-app 戻るが壊れるため）
     const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        window.location.reload();
-      }
+      if (e.persisted) doReset();
     };
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);

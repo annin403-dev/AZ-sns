@@ -6,14 +6,21 @@ import { createClient } from "@/lib/supabase/server";
 
 /** ログイン */
 export async function login(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  });
-  if (error) return { error: "メールアドレスまたはパスワードが正しくありません" };
-  revalidatePath("/", "layout");
-  redirect("/home");
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return { error: "サーバー設定エラー: Supabase環境変数が未設定です" };
+  }
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    });
+    if (error) return { error: `ログインエラー: ${error.message}` };
+    revalidatePath("/", "layout");
+    redirect("/home");
+  } catch (err) {
+    return { error: `接続エラー: ${String(err)}` };
+  }
 }
 
 /**

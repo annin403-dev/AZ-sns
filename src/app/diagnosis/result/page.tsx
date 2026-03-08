@@ -28,6 +28,7 @@ import { getAZType, JOB_TYPE_INFO } from "@/lib/diagnosis/types-data";
 import { TypePixelArt } from "@/components/pixel-art/TypePixelArt";
 import type { DiagnosisResult } from "@/lib/diagnosis/scoring";
 import type { AZTypeData } from "@/lib/diagnosis/types-data";
+import type { AuraType } from "@/lib/diagnosis/questions";
 
 const STORAGE_KEY = "az_mixed_answers";
 
@@ -38,18 +39,39 @@ export default function DiagnosisResultPage() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      router.replace("/diagnosis");
-      return;
-    }
-    const answers    = JSON.parse(stored);
-    const diagResult = runMixedDiagnosis(answers);
-    const azType     = getAZType(diagResult.jobType, diagResult.auraType);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        router.replace("/diagnosis");
+        return;
+      }
+      const answers    = JSON.parse(stored);
+      const diagResult = runMixedDiagnosis(answers);
 
-    setResult(diagResult);
-    setTypeData(azType ?? null);
-    setTimeout(() => setIsLoaded(true), 80);
+      // getAZType が undefined を返した場合（データ未整備のタイプ）
+      // → jobType が同じ別auraの先頭データにフォールバック
+      let azType = getAZType(diagResult.jobType, diagResult.auraType);
+      if (!azType) {
+        const AURA_FALLBACK: AuraType[] = ["挑戦", "創造", "探究", "奉仕", "安定"];
+        for (const aura of AURA_FALLBACK) {
+          azType = getAZType(diagResult.jobType, aura);
+          if (azType) break;
+        }
+      }
+
+      if (!azType) {
+        // 全フォールバック失敗（データ構造異常）→ 診断に戻す
+        router.replace("/diagnosis");
+        return;
+      }
+
+      setResult(diagResult);
+      setTypeData(azType);
+      setTimeout(() => setIsLoaded(true), 80);
+    } catch (err) {
+      console.error("[診断結果] 処理エラー:", err);
+      router.replace("/diagnosis");
+    }
   }, [router]);
 
   if (!result || !typeData) {
