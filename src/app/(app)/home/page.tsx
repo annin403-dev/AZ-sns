@@ -131,6 +131,32 @@ export default async function HomePage() {
           <WeeklyStats doneCount={doneCount} totalCount={totalCount} rate={weeklyRate} />
         )}
 
+        {/* ─── 積み上げトラッカー誘導カード ─── */}
+        <Link href="/accumulation" className="block">
+          <div
+            className="rounded-2xl p-5 flex items-center justify-between"
+            style={{
+              background: "linear-gradient(135deg, #E8F5E9, #F1F8E9)",
+              border: "1.5px solid #A5D6A7",
+            }}
+          >
+            <div>
+              <p className="text-xs font-semibold mb-0.5" style={{ color: "#2E7D32" }}>
+                🌱 TYPE 02 · 積み上げ王
+              </p>
+              <p className="text-base font-bold mb-0.5" style={{ color: "#1B5E20" }}>
+                今日の積み上げを記録する
+              </p>
+              <p className="text-xs" style={{ color: "#558B2F" }}>
+                地味に見えて、気づけば誰より遠くにいる
+              </p>
+            </div>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" style={{ color: "#2E7D32" }}>
+              <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </Link>
+
         {/* ─── 診断を受けていない場合の誘導カード ─── */}
         {!jobType && (
           <Link href="/diagnosis" className="block">
