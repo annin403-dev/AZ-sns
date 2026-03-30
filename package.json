@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "remotion:studio": "remotion studio remotion/index.tsx",
+    "remotion:render": "remotion render remotion/index.tsx MoleDollMarket output/mole-doll.mp4 --browser-executable=/root/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell --chrome-mode=headless-shell"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
@@ -21,6 +23,9 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@remotion/cli": "^4.0.441",
+    "@remotion/google-fonts": "^4.0.441",
+    "@remotion/player": "^4.0.441",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -28,6 +33,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
+    "remotion": "^4.0.441",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }
