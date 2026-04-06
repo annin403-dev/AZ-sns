@@ -6,10 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "render": "npx remotion render src/remotion/index.tsx MoleDollMarche output/mole-doll.mp4",
+    "remotion:studio": "npx remotion studio src/remotion/index.tsx"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
+    "@remotion/cli": "^4.0.446",
+    "@remotion/google-fonts": "^4.0.446",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.43.5",
     "date-fns": "^3.6.0",
@@ -18,6 +22,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.52.2",
+    "remotion": "^4.0.446",
     "zod": "^3.23.8"
   },
   "devDependencies": {
