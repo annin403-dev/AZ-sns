@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "AZ",
+    "slug": "az-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0B1E"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.az.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D0B1E"
+      },
+      "package": "com.az.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "react-native-reanimated"
+    ]
+  }
+}
