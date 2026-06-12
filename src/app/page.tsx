@@ -62,10 +62,10 @@ export default async function RootPage() {
         {/* キャッチコピー */}
         <div className="text-center mb-3 animate-slide-up">
           <p className="text-sm font-medium mb-2" style={{ color: "#7B78A0" }}>
-            2分でわかる
+            約3分でわかる
           </p>
           <h1 className="text-3xl font-bold leading-tight" style={{ color: "#1C1A2E" }}>
-            自分の
+            自分だけの
             <span style={{ color: "#7C5CDB" }}>取扱説明書</span>
             を<br />作ろう
           </h1>
@@ -76,13 +76,13 @@ export default async function RootPage() {
           className="text-center text-base leading-relaxed mb-10 animate-slide-up"
           style={{ color: "#7B78A0", maxWidth: "280px" }}
         >
-          12問に答えるだけで、あなたの「職業タイプ」と「オーラ」がわかります
+          29問に答えるだけで、7つの軸からあなたの「動き方」と「幸せのパターン」がわかります
         </p>
 
         {/* CTAボタン */}
         <div className="w-full max-w-xs animate-slide-up">
-          <Link href="/diagnosis" className="btn-primary block text-center no-tap-highlight">
-            診断スタート →
+          <Link href="/diagnosis/deep" className="btn-primary block text-center no-tap-highlight">
+            AZ Deep 診断スタート →
           </Link>
           <p className="text-center text-xs mt-3" style={{ color: "#B0ACC8" }}>
             登録なしでできます
@@ -92,9 +92,9 @@ export default async function RootPage() {
         {/* 特徴ポイント */}
         <div className="mt-10 w-full max-w-xs space-y-3 animate-fade-in">
           {[
-            { icon: "⏱", text: "約2分でできる" },
-            { icon: "🔮", text: "40タイプから診断" },
-            { icon: "📖", text: "自分の取扱説明書が作れる" },
+            { icon: "⏱", text: "約3分・29問" },
+            { icon: "🔮", text: "20タイプ×7軸で深く分かる" },
+            { icon: "📖", text: "幸せになるための取扱説明書" },
           ].map((item) => (
             <div
               key={item.text}
