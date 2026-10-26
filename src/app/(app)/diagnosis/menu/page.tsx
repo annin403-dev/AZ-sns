@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { JOB_TYPE_INFO, AURA_INFO } from "@/lib/diagnosis/types-data";
 import type { JobType, AuraType } from "@/lib/diagnosis/questions";
+import { BRAKE_INFO, type BrakeType } from "@/lib/brake/data";
 
 /**
  * 診断メニューページ
@@ -28,7 +29,7 @@ export default async function DiagnosisMenuPage() {
 
   const { data: azProfile } = await supabase
     .from("az_profiles")
-    .select("type_key, self_definition")
+    .select("type_key, self_definition, blocker_map")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -36,6 +37,8 @@ export default async function DiagnosisMenuPage() {
   const auraType = profile?.aura_type as AuraType | null;
   const jobInfo = jobType ? JOB_TYPE_INFO[jobType] : null;
   const auraInfo = auraType ? AURA_INFO[auraType] : null;
+  const brakeType = (azProfile as { blocker_map?: { primary?: BrakeType } } | null)?.blocker_map?.primary;
+  const brakeInfo = brakeType && brakeType in BRAKE_INFO ? BRAKE_INFO[brakeType] : null;
 
   return (
     <div className="min-h-screen pb-24" style={{ background: "#FAF9FF" }}>
@@ -103,6 +106,23 @@ export default async function DiagnosisMenuPage() {
             </div>
           </Link>
         )}
+
+        {/* ─── ブレーキ診断 ─── */}
+        <Link href="/brake" className="block card no-tap-highlight">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold mb-1" style={{ color: "#7C5CDB" }}>
+                🧠 ブレーキ診断
+              </p>
+              <p className="text-base font-bold" style={{ color: "#1C1A2E" }}>
+                {brakeInfo ? `${brakeInfo.emoji} ${brakeInfo.nickname}` : "なぜ今、動けないのか？"}
+              </p>
+              <p className="text-xs mt-1" style={{ color: "#7B78A0" }}>
+                {brakeInfo ? "もう一度診断する →" : "8問で、あなたを止めているブレーキがわかる →"}
+              </p>
+            </div>
+          </div>
+        </Link>
 
         {/* ─── 深掘り診断 ─── */}
         <div className="card">

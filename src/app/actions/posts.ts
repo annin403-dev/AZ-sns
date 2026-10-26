@@ -39,11 +39,16 @@ export async function createPost(formData: FormData) {
   }
 
   // XPを付与（投稿=5XP）
-  await supabase.rpc("increment_xp", { user_id_input: user.id, xp_amount: 5 }).catch(() => {
-    // XP付与に失敗しても投稿自体は成功とする
-  });
+  // XP付与に失敗しても投稿自体は成功とする
+  // （Supabaseのクエリは .catch を持たないので try/catch で受ける）
+  try {
+    await supabase.rpc("increment_xp", { user_id_input: user.id, xp_amount: 5 });
+  } catch {
+    // 何もしない
+  }
 
   revalidatePath("/home");
+  revalidatePath("/sns");
   return { success: true };
 }
 
@@ -69,6 +74,7 @@ export async function deletePost(postId: string) {
   }
 
   revalidatePath("/home");
+  revalidatePath("/sns");
   return { success: true };
 }
 
@@ -108,5 +114,6 @@ export async function toggleReaction(
   }
 
   revalidatePath("/home");
+  revalidatePath("/sns");
   return { success: true };
 }

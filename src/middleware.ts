@@ -64,6 +64,10 @@ export async function middleware(request: NextRequest) {
     "/goals",
     "/quests",
     "/onboarding",
+    "/roadmap",
+    "/braindump",
+    "/ifthen",
+    "/growth",
   ];
   const isProtectedPath = protectedPaths.some((path) =>
     pathname.startsWith(path)

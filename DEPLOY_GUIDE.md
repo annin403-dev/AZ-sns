@@ -34,6 +34,12 @@ ALTER TABLE public.profiles
 > **ファイルの場所**: `src/lib/supabase/schema-v2.sql`
 > → VS Code や任意のエディタで開いて、内容をすべてコピーしてください。
 
+### STEP 1.5: スキーマ v3（Phase 3「良い依存」機能）を適用する
+
+90日ロードマップ・ブレインダンプ・If-Then・脳の成長グラフ用のテーブルです。
+SQL Editor で `src/lib/supabase/schema-v3.sql` の内容をすべて貼り付けて **Run** してください。
+（何度実行しても大丈夫です。`schema-complete.sql` にも同じ内容が入っています）
+
 ---
 
 ## STEP 2: Vercel にデプロイする
@@ -84,6 +90,12 @@ ALTER TABLE public.profiles
 | 目標追加 | `https://[your-domain]/goals/new` |
 | マイページ | `https://[your-domain]/mypage` |
 | Wish Map | `https://[your-domain]/wishmap` |
+| ブレーキ診断（登録不要） | `https://[your-domain]/brake` |
+| 90日ロードマップ | `https://[your-domain]/roadmap` |
+| ブレインダンプ | `https://[your-domain]/braindump` |
+| If-Thenプラン | `https://[your-domain]/ifthen` |
+| 脳の成長グラフ | `https://[your-domain]/growth` |
+| 小さな一歩の広場（SNS） | `https://[your-domain]/sns` |
 
 ---
 
@@ -99,6 +111,13 @@ ALTER TABLE public.profiles
 
 3. **クエスト完了でLuck XP増加**
    `/quests/new` でクエスト追加 → ホームでチェックマーク → `profiles.luck_xp` が増えているか確認
+
+4. **ブレーキ診断 → ロードマップ**
+   `/brake` → 8問回答 → 「90日ロードマップを作る」→ ゴール入力 → `roadmaps` と `if_then_plans` に保存されているか確認
+   → 「今日のクエストにする」でホームにクエストが出るか確認
+
+5. **ブレインダンプ**
+   `/braindump` → モヤモヤを書く → 事実/気持ち/心配に整理され、次の1分が出るか確認
 
 ---
 

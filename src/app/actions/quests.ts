@@ -27,6 +27,7 @@ export async function addQuest(formData: FormData) {
   if (error) return { error: "保存に失敗しました" };
 
   revalidatePath("/home");
+  revalidatePath("/growth");
   return { success: true };
 }
 
@@ -47,11 +48,9 @@ export async function toggleQuest(questId: string, isDone: boolean) {
 
   if (error) return { error: "更新に失敗しました" };
 
-  // Luck XPをprofilesに加算（完了時のみ）
-  if (isDone) {
-    await supabase.rpc("increment_luck_xp", { user_id: user.id, amount: 10 }).maybeSingle();
-  }
+  // Luck XP の加算は DB トリガー（handle_quest_complete）が行う
 
   revalidatePath("/home");
+  revalidatePath("/growth");
   return { success: true };
 }

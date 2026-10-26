@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { table } from "@/lib/supabase/untyped";
+import QuestList from "@/components/features/QuestList";
 
 /**
  * ホームページ（サーバーコンポーネント）
@@ -11,6 +13,7 @@ import Link from "next/link";
  * - 感情ログ入口
  * - Three Good Things 入口
  * - 詰まりボタン（layout.tsxで常時表示）
+ * - AZからのひとこと / If-Then / AZツール（Phase 3）
  */
 export default async function HomePage() {
   const supabase = await createClient();
@@ -69,6 +72,14 @@ export default async function HomePage() {
     .eq("user_id", user.id)
     .gte("scheduled_date", weekStart);
 
+  // 有効なIf-Thenプラン
+  const { data: ifThens } = await table(supabase, "if_then_plans")
+    .select("id, trigger_text, action_text, last_done_date")
+    .eq("user_id", user.id)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(2);
+
   const displayName = profile?.display_name || "シーカー";
   const luckLv = profile?.luck_lv || 1;
   const luckXp = profile?.luck_xp || 0;
@@ -112,11 +123,26 @@ export default async function HomePage() {
 
       <main className="px-5 space-y-4">
 
+        {/* ─── AZからのひとこと ─── */}
+        <AzMessage
+          doneToday={(quests || []).filter((q) => q.is_done).length}
+          totalToday={(quests || []).length}
+          mood={todayLog?.mood ?? null}
+        />
+
         {/* ─── Luck Lv カード ─── */}
         <LuckCard luckLv={luckLv} luckXp={luckXp} hp={hp} mp={mp} />
 
         {/* ─── 今日のクエスト ─── */}
-        <QuestSection quests={quests || []} userId={user.id} />
+        <QuestList quests={quests || []} />
+
+        {/* ─── If-Then ─── */}
+        {ifThens && ifThens.length > 0 && (
+          <IfThenSection plans={ifThens} today={today} />
+        )}
+
+        {/* ─── AZツール ─── */}
+        <AzTools />
 
         {/* ─── 感情ログ ─── */}
         <EmotionSection todayLog={todayLog} />
@@ -251,96 +277,112 @@ function LuckCard({
   );
 }
 
-// ─── クエストセクション ──────────────────────────────────────
+// ─── AZからのひとこと ────────────────────────────────────────
 
-function QuestSection({
-  quests,
-  userId,
+/**
+ * 今日の状態に合わせて、内なる最高の自分＝AZが声をかける
+ * 何もできていない日ほど、責めずに安全基地として受け止める
+ */
+function AzMessage({
+  doneToday,
+  totalToday,
+  mood,
 }: {
-  quests: Array<{ id: string; title: string; is_done: boolean; luck_xp_reward: number }>;
-  userId: string;
+  doneToday: number;
+  totalToday: number;
+  mood: string | null;
 }) {
-  const doneCount = quests.filter((q) => q.is_done).length;
+  let message: string;
+  let cta: { href: string; label: string };
+
+  if (mood === "rough" || mood === "tired") {
+    message = "今日は充電の日にしよう。アプリを開けた、それだけで今日の回路は通っているよ。";
+    cta = { href: "/braindump", label: "モヤモヤを預ける" };
+  } else if (doneToday > 0 && doneToday === totalToday) {
+    message = "今日のクエスト、ぜんぶクリア。脳の中で新しい道がまた少し太くなったよ。";
+    cta = { href: "/growth", label: "成長グラフを見る" };
+  } else if (doneToday > 0) {
+    message = "もう一歩踏み出せてるね。現状維持本能に勝った証拠だよ。";
+    cta = { href: "/growth", label: "積み上げを見る" };
+  } else if (totalToday > 0) {
+    message = "動けなくても大丈夫。いちばん小さなクエストを、1分だけやってみる？";
+    cta = { href: "/braindump", label: "頭の中を整理する" };
+  } else {
+    message = "おかえり。今日のあなたにできる、いちばん小さな一歩を一緒に決めよう。";
+    cta = { href: "/roadmap", label: "今日の一歩を見る" };
+  }
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-bold" style={{ color: "#1C1A2E" }}>
-          今日のクエスト
-        </h2>
-        <Link
-          href="/quests/new"
-          className="text-sm font-medium px-3 py-1 rounded-lg no-tap-highlight"
-          style={{ color: "#7C5CDB", background: "#EDE9F9" }}
-        >
-          + 追加
+    <div
+      className="rounded-2xl p-4 flex gap-3 items-start"
+      style={{ background: "linear-gradient(135deg, #F3F1FC, #FFFFFF)", border: "1.5px solid #C8BEF0" }}
+    >
+      <div
+        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold"
+        style={{ background: "linear-gradient(135deg, #7C5CDB, #F5A623)" }}
+      >
+        AZ
+      </div>
+      <div className="flex-1">
+        <p className="text-sm leading-relaxed" style={{ color: "#1C1A2E" }}>
+          {message}
+        </p>
+        <Link href={cta.href} className="text-xs font-semibold mt-1 inline-block no-tap-highlight" style={{ color: "#7C5CDB" }}>
+          {cta.label} →
         </Link>
       </div>
+    </div>
+  );
+}
 
-      {quests.length === 0 ? (
-        <div className="text-center py-6">
-          <p className="text-sm" style={{ color: "#B0ACC8" }}>
-            今日のクエストがまだありません
+// ─── If-Then セクション ──────────────────────────────────────
+
+function IfThenSection({
+  plans,
+  today,
+}: {
+  plans: Array<{ id: string; trigger_text: string; action_text: string; last_done_date: string | null }>;
+  today: string;
+}) {
+  return (
+    <Link href="/ifthen" className="block card no-tap-highlight">
+      <p className="text-sm font-bold mb-2" style={{ color: "#1C1A2E" }}>
+        🔁 今日のIf-Then
+      </p>
+      <div className="space-y-1.5">
+        {plans.map((p) => (
+          <p key={p.id} className="text-sm" style={{ color: "#4A4766" }}>
+            {p.last_done_date === today ? "✅" : "◻️"} もし{p.trigger_text}、{p.action_text}
           </p>
-          <Link
-            href="/quests/new"
-            className="inline-block mt-3 text-sm font-medium no-tap-highlight"
-            style={{ color: "#7C5CDB" }}
-          >
-            最小行動を決める →
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {quests.map((quest) => (
-            <div
-              key={quest.id}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl"
-              style={{
-                background: quest.is_done ? "#F0EAFC" : "#F8F7FF",
-                border: `1.5px solid ${quest.is_done ? "#C8BEF0" : "#E8E4F8"}`,
-              }}
-            >
-              {/* チェックボックス */}
-              <div
-                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
-                style={{
-                  background: quest.is_done ? "#7C5CDB" : "#FFFFFF",
-                  border: `2px solid ${quest.is_done ? "#7C5CDB" : "#D0CAE8"}`,
-                }}
-              >
-                {quest.is_done && (
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24">
-                    <path
-                      d="M5 13L9 17L19 7"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </div>
-              <span
-                className="flex-1 text-sm"
-                style={{
-                  color: quest.is_done ? "#7B78A0" : "#1C1A2E",
-                  textDecoration: quest.is_done ? "line-through" : "none",
-                }}
-              >
-                {quest.title}
-              </span>
-              <span className="text-xs" style={{ color: "#F5A623" }}>
-                +{quest.luck_xp_reward}
-              </span>
-            </div>
-          ))}
-          {/* 達成率 */}
-          <p className="text-xs text-right mt-1" style={{ color: "#7B78A0" }}>
-            {doneCount}/{quests.length} 完了
+        ))}
+      </div>
+    </Link>
+  );
+}
+
+// ─── AZツール ────────────────────────────────────────────────
+
+const AZ_TOOLS = [
+  { href: "/brake", emoji: "🧠", title: "ブレーキ診断", sub: "なぜ動けない？" },
+  { href: "/roadmap", emoji: "🗺", title: "90日ロードマップ", sub: "迷わない道" },
+  { href: "/braindump", emoji: "🌀", title: "ブレインダンプ", sub: "モヤモヤを預ける" },
+  { href: "/growth", emoji: "🌱", title: "脳の成長グラフ", sub: "積み上げを見る" },
+];
+
+function AzTools() {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {AZ_TOOLS.map((tool) => (
+        <Link key={tool.href} href={tool.href} className="card no-tap-highlight">
+          <span className="text-xl">{tool.emoji}</span>
+          <p className="text-sm font-bold mt-1" style={{ color: "#1C1A2E" }}>
+            {tool.title}
           </p>
-        </div>
-      )}
+          <p className="text-xs" style={{ color: "#7B78A0" }}>
+            {tool.sub}
+          </p>
+        </Link>
+      ))}
     </div>
   );
 }
