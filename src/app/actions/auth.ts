@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 /** ログイン */
@@ -11,7 +12,12 @@ export async function login(formData: FormData) {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   });
-  if (error) return { error: "メールアドレスまたはパスワードが正しくありません" };
+  if (error) {
+    if (error.message.includes("Email not confirmed")) {
+      return { error: "メールアドレスの確認がまだです。届いた確認メールのリンクを開いてください" };
+    }
+    return { error: "メールアドレスまたはパスワードが正しくありません" };
+  }
   revalidatePath("/", "layout");
   redirect("/home");
 }
@@ -38,13 +44,24 @@ export async function register(formData: FormData) {
   // Supabaseにサインアップ
   const { data: authData, error } = await supabase.auth.signUp({
     email, password,
-    options: { data: { username, display_name: displayName || username } },
+    options: {
+      data: { username, display_name: displayName || username },
+      // 確認メールのリンクを、このアプリ自身のURLに戻す
+      emailRedirectTo: `${appOrigin()}/auth/callback`,
+    },
   });
 
   if (error) {
     if (error.message.includes("already registered"))
       return { error: "このメールアドレスはすでに登録されています" };
     return { error: "登録に失敗しました。もう一度お試しください" };
+  }
+
+  // メール確認が必要な設定だとセッションが無いので、確認メールの案内を出す
+  if (!authData.session) {
+    return {
+      info: `${email} に確認メールを送りました。メール内のリンクを開くと登録が完了します（迷惑メールフォルダも確認してね）`,
+    };
   }
 
   // 診断結果をprofilesに保存（トリガー待ち500ms）
@@ -66,4 +83,14 @@ export async function logout() {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/login");
+}
+
+/** 今アクセスされているアプリのURL（例：https://az-sns.vercel.app） */
+function appOrigin() {
+  const h = headers();
+  const origin = h.get("origin");
+  if (origin) return origin;
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}`;
 }

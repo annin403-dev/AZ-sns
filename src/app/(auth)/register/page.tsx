@@ -14,14 +14,18 @@ function RegisterForm() {
   const diagType = searchParams.get("type") || "";
   const diagAura = searchParams.get("aura") || "";
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     setError(null);
     const result = await register(formData);
-    if (result?.error) {
+    if (result && "error" in result && result.error) {
       setError(result.error);
+      setLoading(false);
+    } else if (result && "info" in result && result.info) {
+      setInfo(result.info);
       setLoading(false);
     }
   }
@@ -41,6 +45,13 @@ function RegisterForm() {
           <p className="text-xs font-medium mb-0.5" style={{ color: "#7B78A0" }}>あなたのAZタイプ</p>
           <p className="font-bold" style={{ color: "#7C5CDB" }}>{diagType} × {diagAura}</p>
           <p className="text-xs mt-0.5" style={{ color: "#B0ACC8" }}>登録後に取扱説明書を完成させよう</p>
+        </div>
+      )}
+
+      {info && (
+        <div className="w-full max-w-sm mb-5 rounded-2xl px-4 py-4 text-sm text-center"
+             style={{ background: "#E8F9EF", border: "1.5px solid #B8E8CC", color: "#1C1A2E" }}>
+          📩 {info}
         </div>
       )}
 
