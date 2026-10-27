@@ -49,7 +49,8 @@ export default function NewPostPage() {
       setError(result.error);
       setLoading(false);
     } else {
-      router.push("/home");
+      router.push("/sns");
+      router.refresh();
     }
   }
 

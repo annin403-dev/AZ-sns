@@ -19,6 +19,7 @@ import { runDiagnosis } from "@/lib/diagnosis/scoring";
 import { getAZType, JOB_TYPE_INFO, AURA_INFO } from "@/lib/diagnosis/types-data";
 import type { DiagnosisResult } from "@/lib/diagnosis/scoring";
 import type { AZTypeData } from "@/lib/diagnosis/types-data";
+import { saveDiagnosisResult } from "@/app/actions/diagnosis";
 
 const STORAGE_KEY = "az_diagnosis_answers";
 
@@ -29,6 +30,8 @@ export default function DiagnosisResultPage() {
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [typeData, setTypeData] = useState<AZTypeData | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  // ログイン中なら結果を保存済み（登録画面ではなくアプリへ戻す）
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     // localStorage から回答を取得してスコア計算
@@ -45,6 +48,10 @@ export default function DiagnosisResultPage() {
 
     setResult(diagResult);
     setTypeData(azType ?? null);
+
+    saveDiagnosisResult(diagResult.jobType, diagResult.auraType)
+      .then((res) => setSaved(res.saved))
+      .catch(() => setSaved(false));
 
     // アニメーションのために少し遅らせる
     setTimeout(() => setIsLoaded(true), 100);
@@ -224,22 +231,42 @@ export default function DiagnosisResultPage() {
             transition: "opacity 0.5s ease-out 0.5s",
           }}
         >
-          {/* メインCTA：登録して続ける */}
-          <Link
-            href={`/register?type=${result.jobType}&aura=${result.auraType}`}
-            className="btn-primary block text-center no-tap-highlight"
-          >
-            登録して、取扱説明書を完成させる →
-          </Link>
+          {saved ? (
+            <>
+              <p className="text-center text-sm" style={{ color: "#38C074" }}>
+                ✅ 結果をマイページに保存しました
+              </p>
+              <Link href="/diagnosis/menu" className="btn-primary block text-center no-tap-highlight">
+                診断メニューへ →
+              </Link>
+              <Link
+                href="/home"
+                className="block text-center py-3 text-sm no-tap-highlight"
+                style={{ color: "#7B78A0" }}
+              >
+                ホームへ
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* メインCTA：登録して続ける */}
+              <Link
+                href={`/register?type=${result.jobType}&aura=${result.auraType}`}
+                className="btn-primary block text-center no-tap-highlight"
+              >
+                登録して、取扱説明書を完成させる →
+              </Link>
 
-          {/* サブCTA：あとで */}
-          <Link
-            href="/"
-            className="block text-center py-3 text-sm no-tap-highlight"
-            style={{ color: "#7B78A0" }}
-          >
-            あとでにする
-          </Link>
+              {/* サブCTA：あとで */}
+              <Link
+                href="/"
+                className="block text-center py-3 text-sm no-tap-highlight"
+                style={{ color: "#7B78A0" }}
+              >
+                あとでにする
+              </Link>
+            </>
+          )}
         </div>
       </main>
     </div>

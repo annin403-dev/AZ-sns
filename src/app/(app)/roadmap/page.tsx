@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { table } from "@/lib/supabase/untyped";
-import { BRAKE_INFO, type BrakeType } from "@/lib/brake/data";
+import { BRAKE_INFO, savedBrakeType, type BrakeType } from "@/lib/brake/data";
 import { currentWeek, type RoadmapPlan } from "@/lib/ai/roadmap";
 import RoadmapForm from "@/components/features/RoadmapForm";
 import RoadmapView from "@/components/features/RoadmapView";
@@ -36,14 +36,9 @@ export default async function RoadmapPage({
     .select("blocker_map")
     .eq("user_id", user.id)
     .maybeSingle();
-  const savedBrake = azProfile?.blocker_map?.primary as BrakeType | undefined;
   const brakeParam = searchParams.brake as BrakeType | undefined;
   const brake =
-    brakeParam && brakeParam in BRAKE_INFO
-      ? brakeParam
-      : savedBrake && savedBrake in BRAKE_INFO
-        ? savedBrake
-        : null;
+    brakeParam && brakeParam in BRAKE_INFO ? brakeParam : savedBrakeType(azProfile?.blocker_map);
 
   if (!roadmap || searchParams.new === "1") {
     return <RoadmapForm brake={brake} hasExisting={!!roadmap} />;

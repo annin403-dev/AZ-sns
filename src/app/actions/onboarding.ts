@@ -65,16 +65,25 @@ export async function completeDeepDiagnosis(data: DeepDiagnosisData) {
     ? [data.goalArea, data.goalText].filter(Boolean).join("：")
     : "";
 
+  // ブレーキ診断の結果（blocker_map.brake）は残す
+  const { data: existingAz } = await supabase
+    .from("az_profiles")
+    .select("blocker_map")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const savedBrake = (existingAz as { blocker_map?: { brake?: unknown } } | null)?.blocker_map?.brake;
+
   // az_profilesに保存（upsert = あれば更新・なければ作成）
+  // user_id で照合しないと、行が既にあるとき一意制約違反で保存できない
   const { error } = await supabase.from("az_profiles").upsert({
     user_id: user.id,
     propellant_map: propellantMap,
-    blocker_map: blockerMap,
+    blocker_map: savedBrake ? { ...blockerMap, brake: savedBrake } : blockerMap,
     winning_condition: winningCondition,
     self_definition: data.selfDef,
     no_list: data.noList.filter(Boolean),
     yearly_goal: yearlyGoal,
-  });
+  }, { onConflict: "user_id" });
 
   if (error) {
     console.error("az_profiles保存エラー:", error);

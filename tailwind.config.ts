@@ -25,6 +25,11 @@ const config: Config = {
           primary: "#7C5CDB",   // メインアクセント（バイオレット）
           "primary-light": "#EDE9F9", // プライマリの薄い版（背景等）
 
+          // ─── 旧ダークテーマ時代の名前（古い画面がまだ使っているので明るいテーマの色に割り当てる） ───
+          glow: "#7C5CDB",
+          mystic: "#9B72E6",
+          flame: "#F05252",
+
           // ─── ゲーム要素 ───
           gold: "#F5A623",      // Luck Lv・達成（アンバーゴールド）
           "gold-light": "#FEF5E4", // ゴールドの薄い版
@@ -74,6 +79,7 @@ const config: Config = {
         "slide-up": "slideUp 0.4s ease-out",
         "bounce-soft": "bounceSoft 0.5s ease-out",
         "pulse-gold": "pulseGold 2s ease-in-out infinite",
+        "glow-pulse": "pulseGold 2s ease-in-out infinite",
       },
       keyframes: {
         fadeIn: {

@@ -69,7 +69,7 @@ export default function DiagnosisPage() {
 
   const handleBack = () => {
     if (currentIndex === 0) {
-      router.push("/"); // 最初の問題なら、ランディングへ戻る
+      router.back(); // 最初の問題なら、来た画面へ戻る
     } else {
       setCurrentIndex(currentIndex - 1);
       setSelectedId(null);
@@ -139,7 +139,7 @@ export default function DiagnosisPage() {
 
         {/* 選択肢リスト */}
         <div className="space-y-3">
-          {currentQuestion.options.map((option) => {
+          {displayOrder(currentQuestion.id, currentQuestion.options).map((option, index) => {
             const isSelected = selectedId === option.id;
             return (
               <button
@@ -158,7 +158,7 @@ export default function DiagnosisPage() {
                       transition: "all 0.2s",
                     }}
                   >
-                    {option.id.toUpperCase()}
+                    {"ABCD"[index]}
                   </span>
                   {/* 選択肢テキスト */}
                   <span className="text-base leading-relaxed">
@@ -182,4 +182,18 @@ export default function DiagnosisPage() {
       </footer>
     </div>
   );
+}
+
+/**
+ * 選択肢の表示順を問題ごとに並べ替える
+ * （元データは毎問「a = Pioneer」なので、そのままだと同じ位置を選ぶ人が同じタイプに偏る）
+ * サーバー描画とずれないよう、乱数ではなく問題IDから決まる順番にする
+ */
+function displayOrder<T extends { id: string }>(questionId: number, options: T[]): T[] {
+  const key = (opt: T) => {
+    let h = questionId * 2654435761;
+    for (const ch of opt.id) h = Math.imul(h ^ ch.charCodeAt(0), 2246822519);
+    return h >>> 0;
+  };
+  return [...options].sort((a, b) => key(a) - key(b));
 }

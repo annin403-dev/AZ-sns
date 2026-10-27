@@ -106,12 +106,14 @@ export default function StuckButton() {
       {/* ─── 詰まりボタン（右下固定） ─── */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed right-4 bottom-24 z-40 w-14 h-14 rounded-full
+        className="fixed right-4 z-40 w-14 h-14 rounded-full
                    flex items-center justify-center shadow-lg no-tap-highlight
                    transition-all duration-200 active:scale-95"
         style={{
           background: "#F05252",
           boxShadow: "0 4px 16px rgba(240,82,82,0.40)",
+          // ボトムナビ（約72px）＋iPhoneのホームバー分だけ上に置く
+          bottom: "calc(88px + env(safe-area-inset-bottom, 0px))",
         }}
         aria-label="詰まりボタン"
       >
@@ -120,7 +122,8 @@ export default function StuckButton() {
 
       {/* ─── モーダル ─── */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end">
+        // ボトムナビ（z-50）より手前に出して、下の選択肢が隠れないようにする
+        <div className="fixed inset-0 z-[60] flex items-end">
           {/* オーバーレイ */}
           <div
             className="absolute inset-0"
@@ -130,9 +133,10 @@ export default function StuckButton() {
 
           {/* シート（下から） */}
           <div
-            className="relative w-full rounded-t-3xl p-6 pb-10 animate-slide-up"
+            className="relative w-full rounded-t-3xl p-6 animate-slide-up"
             style={{
               background: "#FFFFFF",
+              paddingBottom: "calc(40px + env(safe-area-inset-bottom, 0px))",
               maxHeight: "85vh",
               overflowY: "auto",
             }}

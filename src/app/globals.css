@@ -43,6 +43,15 @@
     border: 1px solid #E8E4F8;
   }
 
+  /* 旧テーマのカード名（古い画面との互換） */
+  .card-surface {
+    @apply bg-az-surface rounded-2xl shadow-card;
+    border: 1px solid #E8E4F8;
+  }
+  .soul-glow {
+    box-shadow: 0 0 16px rgba(124, 92, 219, 0.35);
+  }
+
   .card-lg {
     @apply bg-az-surface rounded-3xl shadow-card p-5;
     border: 1px solid #E8E4F8;

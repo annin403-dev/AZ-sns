@@ -121,36 +121,24 @@ export function calculateScores(answers: DiagnosisAnswers): DiagnosisScore {
  *
  * 同点の場合：優先順位リストの上位を選ぶ
  */
-export function determineResult(scores: DiagnosisScore): DiagnosisResult {
-  // 職業タイプの最高スコアを見つける
-  let maxJobScore = 0;
-  let bestJobType: JobType = "Pioneer";
+export function determineResult(
+  scores: DiagnosisScore,
+  answers: DiagnosisAnswers = {}
+): DiagnosisResult {
+  // 選択肢に登場する回数がタイプごとに違う（Pioneerは毎問ある等）ので、
+  // 「選べた回数のうち何回選んだか」に直して比べる。これで出やすさの偏りをなくす
+  const jobAppear = countAppearances("jobType");
+  const auraAppear = countAppearances("auraType");
+  const seed = answerSeed(answers);
 
-  for (const jobType of JOB_TYPE_PRIORITY) {
-    const score = scores.jobScores[jobType];
-    if (score > maxJobScore) {
-      maxJobScore = score;
-      bestJobType = jobType;
-    }
-  }
-
-  // オーラの最高スコアを見つける
-  let maxAuraScore = 0;
-  let bestAuraType: AuraType = "創造";
-
-  for (const auraType of AURA_TYPE_PRIORITY) {
-    const score = scores.auraScores[auraType];
-    if (score > maxAuraScore) {
-      maxAuraScore = score;
-      bestAuraType = auraType;
-    }
-  }
+  const bestJobType = pickBest(JOB_TYPE_PRIORITY, scores.jobScores, jobAppear, seed);
+  const bestAuraType = pickBest(AURA_TYPE_PRIORITY, scores.auraScores, auraAppear, seed + 7);
 
   return {
     jobType: bestJobType,
     auraType: bestAuraType,
-    jobScore: maxJobScore,
-    auraScore: maxAuraScore,
+    jobScore: scores.jobScores[bestJobType],
+    auraScore: scores.auraScores[bestAuraType],
     totalAnswers: Object.keys(scores.jobScores).reduce(
       (sum, key) => sum + scores.jobScores[key as JobType],
       0
@@ -160,10 +148,49 @@ export function determineResult(scores: DiagnosisScore): DiagnosisResult {
   };
 }
 
+/** タイプごとに、全問の選択肢の中で何回登場するか */
+function countAppearances(key: "jobType" | "auraType"): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const q of DIAGNOSIS_QUESTIONS) {
+    for (const opt of q.options) {
+      counts[opt[key]] = (counts[opt[key]] || 0) + 1;
+    }
+  }
+  return counts;
+}
+
+/**
+ * 登場回数で割ったスコアが最大のタイプを選ぶ
+ * 同点のときは固定の順番ではなく、回答内容から決まる値で選ぶ
+ * （同じ回答なら毎回同じ結果、違う回答なら偏らない）
+ */
+function pickBest<T extends string>(
+  types: T[],
+  raw: Record<T, number>,
+  appear: Record<string, number>,
+  seed: number
+): T {
+  const rate = (t: T) => raw[t] / (appear[t] || 1);
+  const max = Math.max(...types.map(rate));
+  const tied = types.filter((t) => Math.abs(rate(t) - max) < 1e-9);
+  return tied[seed % tied.length];
+}
+
+/** 回答の組み合わせから決まる数値（同点の決め手に使う） */
+function answerSeed(answers: DiagnosisAnswers): number {
+  let h = 0;
+  for (const id of Object.keys(answers).sort((a, b) => Number(a) - Number(b))) {
+    for (const ch of `${id}${answers[Number(id)]}`) {
+      h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    }
+  }
+  return h;
+}
+
 /**
  * 回答から診断結果を一括計算する（メイン関数）
  */
 export function runDiagnosis(answers: DiagnosisAnswers): DiagnosisResult {
   const scores = calculateScores(answers);
-  return determineResult(scores);
+  return determineResult(scores, answers);
 }

@@ -132,3 +132,10 @@ export function scoreBrake(answers: Record<string, number>): BrakeResult {
     scores,
   };
 }
+
+/** az_profiles.blocker_map から保存済みのブレーキを取り出す（旧形式 primary 直下にも対応） */
+export function savedBrakeType(blockerMap: unknown): BrakeType | null {
+  const map = blockerMap as { brake?: { primary?: string }; primary?: string } | null;
+  const t = map?.brake?.primary ?? map?.primary;
+  return t && t in BRAKE_INFO ? (t as BrakeType) : null;
+}

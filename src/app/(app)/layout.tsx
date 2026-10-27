@@ -28,7 +28,8 @@ export default async function AppLayout({
   return (
     <div
       className="min-h-screen"
-      style={{ background: "#FAF9FF", paddingBottom: "80px" }}
+      // ボトムナビ＋iPhoneのホームバー分の余白（ページ末尾がナビに隠れないように）
+      style={{ background: "#FAF9FF", paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
     >
       {/* メインコンテンツ */}
       <main>{children}</main>

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { JOB_TYPE_INFO, AURA_INFO } from "@/lib/diagnosis/types-data";
 import type { JobType, AuraType } from "@/lib/diagnosis/questions";
-import { BRAKE_INFO, type BrakeType } from "@/lib/brake/data";
+import { BRAKE_INFO, savedBrakeType } from "@/lib/brake/data";
 
 /**
  * 診断メニューページ
@@ -37,8 +37,8 @@ export default async function DiagnosisMenuPage() {
   const auraType = profile?.aura_type as AuraType | null;
   const jobInfo = jobType ? JOB_TYPE_INFO[jobType] : null;
   const auraInfo = auraType ? AURA_INFO[auraType] : null;
-  const brakeType = (azProfile as { blocker_map?: { primary?: BrakeType } } | null)?.blocker_map?.primary;
-  const brakeInfo = brakeType && brakeType in BRAKE_INFO ? BRAKE_INFO[brakeType] : null;
+  const brakeType = savedBrakeType((azProfile as { blocker_map?: unknown } | null)?.blocker_map);
+  const brakeInfo = brakeType ? BRAKE_INFO[brakeType] : null;
 
   return (
     <div className="min-h-screen pb-24" style={{ background: "#FAF9FF" }}>
@@ -182,23 +182,12 @@ export default async function DiagnosisMenuPage() {
           <p className="text-sm mb-3" style={{ color: "#7B78A0" }}>
             ChatGPTやClaudeに「自分のことを理解してもらう」ためのプロンプトを生成
           </p>
-          {azProfile ? (
-            <Link
-              href="/mypage/prompt"
-              className="btn-secondary block text-center no-tap-highlight"
-            >
-              プロンプトを見る
-            </Link>
-          ) : (
-            <div
-              className="rounded-xl py-4 text-center"
-              style={{ background: "#F3F1FC" }}
-            >
-              <p className="text-xs" style={{ color: "#B0ACC8" }}>
-                深掘り診断を完了するとプロンプトが生成されます
-              </p>
-            </div>
-          )}
+          <Link
+            href="/mypage/prompt"
+            className="btn-secondary block text-center no-tap-highlight"
+          >
+            プロンプトを見る
+          </Link>
         </div>
 
       </main>

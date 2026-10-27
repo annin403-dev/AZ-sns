@@ -289,7 +289,8 @@ function ManualSection({
   color: string;
   colorLight: string;
 }) {
-  if (!data || Object.keys(data).length === 0) return null;
+  // ブレーキ診断の結果だけが入っている（深掘り診断前）場合も表示しない
+  if (!data || (!Array.isArray(data.items) && !data.summary)) return null;
 
   return (
     <div className="rounded-xl p-3" style={{ background: colorLight }}>

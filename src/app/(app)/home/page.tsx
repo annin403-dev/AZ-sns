@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { table } from "@/lib/supabase/untyped";
 import QuestList from "@/components/features/QuestList";
+import EmotionLogButton from "@/components/features/EmotionLogButton";
 
 /**
  * ホームページ（サーバーコンポーネント）
@@ -422,17 +423,7 @@ function EmotionSection({
             </p>
           )}
         </div>
-        {/* 感情ログボタン（本来はモーダル。今はプレースホルダー） */}
-        <Link
-          href="/home"
-          className="px-4 py-2 rounded-xl text-sm font-medium no-tap-highlight"
-          style={{
-            background: todayLog ? "#F3F1FC" : "#7C5CDB",
-            color: todayLog ? "#7C5CDB" : "#FFFFFF",
-          }}
-        >
-          {todayLog ? "更新" : "記録する"}
-        </Link>
+        <EmotionLogButton hasLog={!!todayLog} />
       </div>
     </div>
   );
