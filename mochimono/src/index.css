@@ -6,7 +6,7 @@
   --color-accent-500: #2f8f7f;
   --color-accent-600: #237466;
   --color-accent-700: #1b5c51;
-  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", system-ui, sans-serif;
+  --font-sans: "BIZ UDGothic", "MS Gothic", "ＭＳ ゴシック", "Hiragino Sans", "Noto Sans JP", sans-serif;
 }
 
 :root { color-scheme: light dark; }
