@@ -1,0 +1,27 @@
+/**
+ * 設定の詳細: https://developers.cloudflare.com/workers/wrangler/configuration/
+ * 秘密の値（ACCESS_TEAM_DOMAIN / ACCESS_AUD / ALLOWED_EMAIL）はここに書かず、
+ * `npx wrangler secret put <名前>` で登録します（SETUP.md 参照）。
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mochimono",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-11-04",
+	"assets": {
+		"not_found_handling": "single-page-application",
+		// /api/* は必ず Worker が受け取る（認証チェックを通すため）
+		"run_worker_first": ["/api/*"]
+	},
+	"observability": { "enabled": true },
+	"upload_source_maps": true,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "mochimono-db",
+			// `npx wrangler d1 create mochimono-db` で出てきた ID に置きかえる
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			"migrations_dir": "migrations"
+		}
+	]
+}

@@ -1,0 +1,4 @@
+# ローカル開発用。このファイルを .dev.vars にコピーして使います（.dev.vars はリポジトリに入れません）。
+# true にすると、localhost からのアクセスに限り Access の確認を省略します。
+# 本番（localhost 以外）では、この値があっても必ず確認します。
+DEV_DISABLE_AUTH=true
